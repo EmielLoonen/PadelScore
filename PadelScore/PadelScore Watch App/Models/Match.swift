@@ -18,8 +18,10 @@ struct Match: Codable, Identifiable {
     var winner: Int? // 1 or 2, nil if not completed
     var team1Name: String
     var team2Name: String
+    var servingTeam: Int? // 1 or 2, nil if not set
+    var servingPlayer: String? // A, B, C, or D
     
-    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2") {
+    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A") {
         self.id = id
         self.startDate = startDate
         self.endDate = endDate
@@ -30,6 +32,39 @@ struct Match: Codable, Identifiable {
         self.winner = winner
         self.team1Name = team1Name
         self.team2Name = team2Name
+        self.servingTeam = servingTeam
+        self.servingPlayer = servingPlayer
+    }
+    
+    mutating func rotateServe() {
+        // Rotate serve: A (Team 1) -> C (Team 2) -> B (Team 1) -> D (Team 2) -> A...
+        guard let currentPlayer = servingPlayer else {
+            servingPlayer = "A"
+            servingTeam = 1
+            return
+        }
+        
+        switch currentPlayer {
+        case "A":
+            // Team 1 Player A -> Team 2 Player C
+            servingPlayer = "C"
+            servingTeam = 2
+        case "C":
+            // Team 2 Player C -> Team 1 Player B
+            servingPlayer = "B"
+            servingTeam = 1
+        case "B":
+            // Team 1 Player B -> Team 2 Player D
+            servingPlayer = "D"
+            servingTeam = 2
+        case "D":
+            // Team 2 Player D -> Team 1 Player A
+            servingPlayer = "A"
+            servingTeam = 1
+        default:
+            servingPlayer = "A"
+            servingTeam = 1
+        }
     }
     
     var currentSet: Set {

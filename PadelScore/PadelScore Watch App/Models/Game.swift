@@ -52,22 +52,31 @@ struct Game: Codable, Identifiable {
         self.winner = winner
     }
     
-    mutating func incrementPoint(for team: Int) -> Bool {
+    mutating func incrementPoint(for team: Int, useGoldenPoint: Bool = false) -> Bool {
         guard !isCompleted else { return false }
         
         if team == 1 {
-            return incrementTeam1Point()
+            return incrementTeam1Point(useGoldenPoint: useGoldenPoint)
         } else {
-            return incrementTeam2Point()
+            return incrementTeam2Point(useGoldenPoint: useGoldenPoint)
         }
     }
     
-    private mutating func incrementTeam1Point() -> Bool {
+    private mutating func incrementTeam1Point(useGoldenPoint: Bool) -> Bool {
         // Handle deuce (40-40)
         if team1Points == .forty && team2Points == .forty {
-            team1Points = .advantage
-            team2Points = .forty
-            return true
+            if useGoldenPoint {
+                // Golden point: next point wins
+                team1Points = .game
+                isCompleted = true
+                winner = 1
+                return true
+            } else {
+                // Advantage: go to advantage
+                team1Points = .advantage
+                team2Points = .forty
+                return true
+            }
         }
         
         // Handle advantage scenarios
@@ -97,12 +106,21 @@ struct Game: Codable, Identifiable {
         return false
     }
     
-    private mutating func incrementTeam2Point() -> Bool {
+    private mutating func incrementTeam2Point(useGoldenPoint: Bool) -> Bool {
         // Handle deuce (40-40)
         if team1Points == .forty && team2Points == .forty {
-            team2Points = .advantage
-            team1Points = .forty
-            return true
+            if useGoldenPoint {
+                // Golden point: next point wins
+                team2Points = .game
+                isCompleted = true
+                winner = 2
+                return true
+            } else {
+                // Advantage: go to advantage
+                team2Points = .advantage
+                team1Points = .forty
+                return true
+            }
         }
         
         // Handle advantage scenarios

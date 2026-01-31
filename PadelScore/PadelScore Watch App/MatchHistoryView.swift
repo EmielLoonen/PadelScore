@@ -229,7 +229,9 @@ struct InfoRow: View {
 }
 
 #Preview {
+    let gameSettings = GameSettings()
     MatchHistoryView()
-        .environmentObject(ScoreManager())
+        .environmentObject(ScoreManager(gameSettings: gameSettings))
+        .environmentObject(gameSettings)
 }
 
