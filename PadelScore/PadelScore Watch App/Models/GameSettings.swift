@@ -31,8 +31,32 @@ enum ScoringMode: String, Codable {
     }
 }
 
+struct GameSettingsData: Codable {
+    var scoringMode: ScoringMode
+    var scoreboardEnabled: Bool
+    var scoreboardIP: String
+    
+    init(scoringMode: ScoringMode = .goldenPoint, scoreboardEnabled: Bool = false, scoreboardIP: String = "") {
+        self.scoringMode = scoringMode
+        self.scoreboardEnabled = scoreboardEnabled
+        self.scoreboardIP = scoreboardIP
+    }
+}
+
 class GameSettings: ObservableObject {
     @Published var scoringMode: ScoringMode {
+        didSet {
+            save()
+        }
+    }
+    
+    @Published var scoreboardEnabled: Bool {
+        didSet {
+            save()
+        }
+    }
+    
+    @Published var scoreboardIP: String {
         didSet {
             save()
         }
@@ -43,17 +67,26 @@ class GameSettings: ObservableObject {
     init() {
         // Load settings or use defaults
         if let data = UserDefaults.standard.data(forKey: settingsKey),
-           let decoded = try? JSONDecoder().decode(ScoringMode.self, from: data) {
-            self.scoringMode = decoded
+           let decoded = try? JSONDecoder().decode(GameSettingsData.self, from: data) {
+            self.scoringMode = decoded.scoringMode
+            self.scoreboardEnabled = decoded.scoreboardEnabled
+            self.scoreboardIP = decoded.scoreboardIP
         } else {
-            // Default to golden point
+            // Defaults
             self.scoringMode = .goldenPoint
+            self.scoreboardEnabled = false
+            self.scoreboardIP = ""
             save()
         }
     }
     
     private func save() {
-        if let encoded = try? JSONEncoder().encode(scoringMode) {
+        let settingsData = GameSettingsData(
+            scoringMode: scoringMode,
+            scoreboardEnabled: scoreboardEnabled,
+            scoreboardIP: scoreboardIP
+        )
+        if let encoded = try? JSONEncoder().encode(settingsData) {
             UserDefaults.standard.set(encoded, forKey: settingsKey)
         }
     }

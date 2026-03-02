@@ -16,6 +16,7 @@ class ScoreManager: ObservableObject {
     private let historyKey = "PadelScoreMatchHistory"
     private var undoStack: [Match] = []
     var gameSettings: GameSettings
+    private let scoreboardService = ScoreboardService()
     
     init(gameSettings: GameSettings) {
         // Initialize with a new match
@@ -42,6 +43,9 @@ class ScoreManager: ObservableObject {
             if currentMatch.currentSet.isCompleted {
                 handleSetCompletion()
             }
+            
+            // Send to scoreboard
+            sendScoreToScoreboard()
             return
         }
         
@@ -54,6 +58,9 @@ class ScoreManager: ObservableObject {
             if currentMatch.currentGame.isCompleted {
                 handleGameCompletion()
             }
+            
+            // Send to scoreboard
+            sendScoreToScoreboard()
         }
     }
     
@@ -74,6 +81,9 @@ class ScoreManager: ObservableObject {
     func undo() {
         guard !undoStack.isEmpty else { return }
         
+        // Store current set score to check if it changes
+        let currentSetScore = (currentMatch.currentSet.team1Games, currentMatch.currentSet.team2Games)
+        
         // Restore previous state
         let previousMatch = undoStack.removeLast()
         
@@ -92,9 +102,21 @@ class ScoreManager: ObservableObject {
         // Restore the match state
         currentMatch = previousMatch
         
+        // Check if set score changed
+        let previousSetScore = (currentMatch.currentSet.team1Games, currentMatch.currentSet.team2Games)
+        let setScoreChanged = currentSetScore.0 != previousSetScore.0 || currentSetScore.1 != previousSetScore.1
+        
         // Play haptic feedback
         let haptic = WKInterfaceDevice.current()
         haptic.play(.click)
+        
+        // Send to scoreboard
+        sendScoreToScoreboard()
+        
+        // If set score changed, send it to scoreboard
+        if setScoreChanged {
+            sendSetScoreToScoreboard()
+        }
     }
     
     func canUndo() -> Bool {
@@ -106,6 +128,9 @@ class ScoreManager: ObservableObject {
         
         // Add game to current set
         currentMatch.currentSet.addGame(winner: gameWinner)
+        
+        // Send set score to scoreboard (after game is added to set)
+        sendSetScoreToScoreboard()
         
         // Rotate serve after each game
         currentMatch.rotateServe()
@@ -221,6 +246,46 @@ class ScoreManager: ObservableObject {
     func clearHistory() {
         matchHistory.removeAll()
         UserDefaults.standard.removeObject(forKey: historyKey)
+    }
+    
+    // MARK: - Scoreboard Integration
+    
+    private func sendScoreToScoreboard() {
+        // Check if scoreboard is enabled
+        guard gameSettings.scoreboardEnabled else { return }
+        
+        // Validate IP address
+        guard !gameSettings.scoreboardIP.isEmpty else { return }
+        
+        // Format the current game score
+        let scoreText = scoreboardService.formatGameScore(match: currentMatch)
+        
+        // Determine serving team
+        var servingTeam: Int? = nil
+        if currentMatch.currentSet.isTiebreak {
+            // For tiebreak, use the tiebreak serving team
+            servingTeam = currentMatch.currentSet.getTiebreakServingTeam()
+        } else {
+            // For regular game, use the match serving team
+            servingTeam = currentMatch.servingTeam
+        }
+        
+        // Send to scoreboard
+        scoreboardService.sendScore(text: scoreText, ipAddress: gameSettings.scoreboardIP, servingTeam: servingTeam)
+    }
+    
+    private func sendSetScoreToScoreboard() {
+        // Check if scoreboard is enabled
+        guard gameSettings.scoreboardEnabled else { return }
+        
+        // Validate IP address
+        guard !gameSettings.scoreboardIP.isEmpty else { return }
+        
+        // Format the current set score
+        let setScoreText = scoreboardService.formatSetScore(match: currentMatch)
+        
+        // Send to scoreboard
+        scoreboardService.sendSetScore(text: setScoreText, ipAddress: gameSettings.scoreboardIP)
     }
 }
 

@@ -22,6 +22,12 @@ struct SettingsView: View {
                         }
                     ))
                 }
+                
+                Section("Scoreboard") {
+                    Toggle("Enable Scoreboard", isOn: $gameSettings.scoreboardEnabled)
+                    
+                    TextField("Scoreboard IP Address", text: $gameSettings.scoreboardIP)
+                }
             }
             .navigationTitle("Settings")
             .toolbar {
