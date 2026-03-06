@@ -20,8 +20,12 @@ struct Match: Codable, Identifiable {
     var team2Name: String
     var servingTeam: Int? // 1 or 2, nil if not set
     var servingPlayer: String? // A, B, C, or D
-    
-    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A") {
+    var team1Player1: String
+    var team1Player2: String
+    var team2Player1: String
+    var team2Player2: String
+
+    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "") {
         self.id = id
         self.startDate = startDate
         self.endDate = endDate
@@ -34,6 +38,10 @@ struct Match: Codable, Identifiable {
         self.team2Name = team2Name
         self.servingTeam = servingTeam
         self.servingPlayer = servingPlayer
+        self.team1Player1 = team1Player1
+        self.team1Player2 = team1Player2
+        self.team2Player1 = team2Player1
+        self.team2Player2 = team2Player2
     }
     
     mutating func rotateServe() {

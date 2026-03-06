@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MenuView: View {
-    @Binding var showingNewMatchAlert: Bool
+    @Binding var showingNewMatchSetup: Bool
     @Binding var showingHistory: Bool
     @Binding var showingSettings: Bool
     @Binding var showingMenu: Bool
@@ -20,7 +20,7 @@ struct MenuView: View {
             List {
                 if isMatchInProgress {
                     Button {
-                        showingNewMatchAlert = true
+                        showingNewMatchSetup = true
                         dismiss()
                     } label: {
                         HStack {
@@ -64,7 +64,7 @@ struct MenuView: View {
 
 #Preview {
     MenuView(
-        showingNewMatchAlert: .constant(false),
+        showingNewMatchSetup: .constant(false),
         showingHistory: .constant(false),
         showingSettings: .constant(false),
         showingMenu: .constant(true),

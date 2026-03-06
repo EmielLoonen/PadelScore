@@ -14,7 +14,7 @@ struct ContentView: View {
     @State private var showingSettings = false
     @State private var showingMatchControl = false
     @State private var showingMenu = false
-    @State private var showingNewMatchAlert = false
+    @State private var showingNewMatchSetup = false
     @State private var lastTapTime: Date?
     @State private var lastTapTeam: Int?
     @State private var pendingIncrementTask: Task<Void, Never>?
@@ -92,6 +92,12 @@ struct ContentView: View {
                                     HStack(spacing: 8) {
                                         // Left button - Team 1
                                         VStack(spacing: 4) {
+                                            if let label = teamInitials(player1: scoreManager.currentMatch.team1Player1, player2: scoreManager.currentMatch.team1Player2) {
+                                                Text(label)
+                                                    .font(.system(size: 10, weight: .medium))
+                                                    .foregroundColor(.secondary)
+                                            }
+
                                             if let tiebreakServingTeam = scoreManager.currentMatch.currentSet.getTiebreakServingTeam(),
                                                tiebreakServingTeam == 1 {
                                                 Circle()
@@ -102,7 +108,7 @@ struct ContentView: View {
                                                     .fill(.clear)
                                                     .frame(width: 8, height: 8)
                                             }
-                                            
+
                                             Button(action: {
                                                 handleButtonTap(team: 1)
                                             }) {
@@ -116,9 +122,15 @@ struct ContentView: View {
                                             .frame(height: geometry.size.height * 0.5)
                                             .frame(maxWidth: .infinity)
                                         }
-                                        
+
                                         // Right button - Team 2
                                         VStack(spacing: 4) {
+                                            if let label = teamInitials(player1: scoreManager.currentMatch.team2Player1, player2: scoreManager.currentMatch.team2Player2) {
+                                                Text(label)
+                                                    .font(.system(size: 10, weight: .medium))
+                                                    .foregroundColor(.secondary)
+                                            }
+
                                             if let tiebreakServingTeam = scoreManager.currentMatch.currentSet.getTiebreakServingTeam(),
                                                tiebreakServingTeam == 2 {
                                                 Circle()
@@ -129,7 +141,7 @@ struct ContentView: View {
                                                     .fill(.clear)
                                                     .frame(width: 8, height: 8)
                                             }
-                                            
+
                                             Button(action: {
                                                 handleButtonTap(team: 2)
                                             }) {
@@ -149,6 +161,12 @@ struct ContentView: View {
                                 HStack(spacing: 8) {
                                     // Left button - Team 1
                                     VStack(spacing: 4) {
+                                        if let label = teamInitials(player1: scoreManager.currentMatch.team1Player1, player2: scoreManager.currentMatch.team1Player2) {
+                                            Text(label)
+                                                .font(.system(size: 10, weight: .medium))
+                                                .foregroundColor(.secondary)
+                                        }
+
                                         if scoreManager.currentMatch.servingTeam == 1 {
                                             Circle()
                                                 .fill(.blue)
@@ -158,7 +176,7 @@ struct ContentView: View {
                                                 .fill(.clear)
                                                 .frame(width: 8, height: 8)
                                         }
-                                        
+
                                         Button(action: {
                                             handleButtonTap(team: 1)
                                         }) {
@@ -173,9 +191,15 @@ struct ContentView: View {
                                         .frame(height: geometry.size.height * 0.5)
                                         .frame(maxWidth: .infinity)
                                     }
-                                    
+
                                     // Right button - Team 2
                                     VStack(spacing: 4) {
+                                        if let label = teamInitials(player1: scoreManager.currentMatch.team2Player1, player2: scoreManager.currentMatch.team2Player2) {
+                                            Text(label)
+                                                .font(.system(size: 10, weight: .medium))
+                                                .foregroundColor(.secondary)
+                                        }
+
                                         if scoreManager.currentMatch.servingTeam == 2 {
                                             Circle()
                                                 .fill(.blue)
@@ -185,7 +209,7 @@ struct ContentView: View {
                                                 .fill(.clear)
                                                 .frame(width: 8, height: 8)
                                         }
-                                        
+
                                         Button(action: {
                                             handleButtonTap(team: 2)
                                         }) {
@@ -210,7 +234,7 @@ struct ContentView: View {
                                     .foregroundColor(.green)
                                 
                                 Button("New Match") {
-                                    showingNewMatchAlert = true
+                                    showingNewMatchSetup = true
                                 }
                                 .buttonStyle(.bordered)
                                 .frame(height: geometry.size.height * 0.3)
@@ -264,24 +288,34 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingMenu) {
                 MenuView(
-                    showingNewMatchAlert: $showingNewMatchAlert,
+                    showingNewMatchSetup: $showingNewMatchSetup,
                     showingHistory: $showingHistory,
                     showingSettings: $showingSettings,
                     showingMenu: $showingMenu,
                     isMatchInProgress: !scoreManager.currentMatch.isCompleted
                 )
             }
-            .alert("Start New Match?", isPresented: $showingNewMatchAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("New Match") {
-                    scoreManager.startNewMatch()
-                }
-            } message: {
-                Text("This will save the current match and start a new one.")
+            .sheet(isPresented: $showingNewMatchSetup) {
+                NewMatchSetupView(gameSettings: gameSettings)
+                    .environmentObject(scoreManager)
             }
         }
     }
     
+    private func initials(_ name: String) -> String {
+        name.split(separator: " ")
+            .compactMap { $0.first.map(String.init) }
+            .joined()
+            .uppercased()
+    }
+
+    private func teamInitials(player1: String, player2: String) -> String? {
+        let i1 = initials(player1)
+        let i2 = initials(player2)
+        let combined = [i1, i2].filter { !$0.isEmpty }.joined(separator: "/")
+        return combined.isEmpty ? nil : combined
+    }
+
     private func handleButtonTap(team: Int) {
         let now = Date()
         

@@ -19,9 +19,13 @@ class ScoreManager: ObservableObject {
     private let scoreboardService = ScoreboardService()
     
     init(gameSettings: GameSettings) {
-        // Initialize with a new match
-        self.currentMatch = Match()
         self.gameSettings = gameSettings
+        self.currentMatch = Match(
+            team1Player1: gameSettings.team1Player1,
+            team1Player2: gameSettings.team1Player2,
+            team2Player1: gameSettings.team2Player1,
+            team2Player2: gameSettings.team2Player2
+        )
         loadHistory()
     }
     
@@ -206,13 +210,22 @@ class ScoreManager: ObservableObject {
             saveMatchToHistory()
         }
         
-        currentMatch = Match()
+        currentMatch = matchWithCurrentPlayers()
         undoStack.removeAll()
     }
-    
+
     func resetCurrentMatch() {
-        currentMatch = Match()
+        currentMatch = matchWithCurrentPlayers()
         undoStack.removeAll()
+    }
+
+    private func matchWithCurrentPlayers() -> Match {
+        Match(
+            team1Player1: gameSettings.team1Player1,
+            team1Player2: gameSettings.team1Player2,
+            team2Player1: gameSettings.team2Player1,
+            team2Player2: gameSettings.team2Player2
+        )
     }
     
     // MARK: - History Management
