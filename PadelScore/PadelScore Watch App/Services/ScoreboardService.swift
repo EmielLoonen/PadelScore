@@ -9,39 +9,38 @@ import Foundation
 
 class ScoreboardService {
     
-    /// Formats the current game score as a string
-    /// - Parameter match: The current match
-    /// - Returns: Formatted score string (e.g., "15-30", "40-40", "AD-40", "3-5")
+    /// Formats the current game score as a string, ordered left-to-right by court side.
     func formatGameScore(match: Match) -> String {
-        // Handle tiebreak
+        let team1IsLeft = match.currentTeam1Side == "L"
         if match.currentSet.isTiebreak {
             if let tiebreak = match.currentSet.tiebreakScore {
-                return "\(tiebreak.team1)-\(tiebreak.team2)"
+                return team1IsLeft
+                    ? "\(tiebreak.team1)-\(tiebreak.team2)"
+                    : "\(tiebreak.team2)-\(tiebreak.team1)"
             }
             return "0-0"
         }
-        
-        // Handle regular game
         let team1Score = match.currentGame.team1Points.displayValue
         let team2Score = match.currentGame.team2Points.displayValue
-        return "\(team1Score)-\(team2Score)"
+        return team1IsLeft ? "\(team1Score)-\(team2Score)" : "\(team2Score)-\(team1Score)"
     }
-    
-    /// Formats the current set score as a string with match score
-    /// - Parameter match: The current match
-    /// - Returns: Formatted set score string with match score (e.g., "3-2 | 1-0")
+
+    /// Formats the current set score as a string with match score, ordered left-to-right by court side.
     func formatSetScore(match: Match) -> String {
-        let setScore = "\(match.currentSet.team1Games)-\(match.currentSet.team2Games)"
-        let matchScore = "\(match.team1Sets)-\(match.team2Sets)"
-        return "\(setScore) | \(matchScore)"
+        let team1IsLeft = match.currentTeam1Side == "L"
+        let leftGames  = team1IsLeft ? match.currentSet.team1Games : match.currentSet.team2Games
+        let rightGames = team1IsLeft ? match.currentSet.team2Games : match.currentSet.team1Games
+        let leftSets   = team1IsLeft ? match.team1Sets : match.team2Sets
+        let rightSets  = team1IsLeft ? match.team2Sets : match.team1Sets
+        return "\(leftGames)-\(rightGames) | \(leftSets)-\(rightSets)"
     }
-    
-    /// Sends the score to the scoreboard via HTTP POST
+
+    /// Sends the score to the scoreboard via HTTP POST.
     /// - Parameters:
     ///   - text: The score text to display
     ///   - ipAddress: The IP address of the scoreboard
-    ///   - servingTeam: The team that is serving (1 for left/team1, 2 for right/team2, nil if unknown)
-    func sendScore(text: String, ipAddress: String, servingTeam: Int?) {
+    ///   - servingIsOnLeft: true if the serving team is on the left side of the court, false for right, nil if unknown
+    func sendScore(text: String, ipAddress: String, servingIsOnLeft: Bool?) {
         // Validate IP address
         guard !ipAddress.isEmpty else { return }
         
@@ -56,18 +55,16 @@ class ScoreboardService {
             "duration": 10
         ]
         
-        // Add draw property if serving team is known
-        if let servingTeam = servingTeam {
-            if servingTeam == 1 {
-                // Left team serving
+        // Add draw property if serving side is known
+        if let servingIsOnLeft = servingIsOnLeft {
+            if servingIsOnLeft {
                 payload["draw"] = [
                     ["dfc": [2, 3, 2, "#E4F527"]],
                     ["dl": [1, 2, 1, 4, "#FFFFFF"]],
                     ["dp": [2, 1, "#FFFFFF"]],
                     ["dp": [2, 5, "#FFFFFF"]]
                 ]
-            } else if servingTeam == 2 {
-                // Right team serving
+            } else {
                 payload["draw"] = [
                     ["dfc": [28, 3, 2, "#E4F527"]],
                     ["dl": [27, 2, 27, 4, "#FFFFFF"]],

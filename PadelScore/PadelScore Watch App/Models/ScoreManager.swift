@@ -12,21 +12,32 @@ import Combine
 class ScoreManager: ObservableObject {
     @Published var currentMatch: Match
     @Published var matchHistory: [Match] = []
+    @Published var pendingServeSelection = false
     
     private let historyKey = "PadelScoreMatchHistory"
     private var undoStack: [Match] = []
     var gameSettings: GameSettings
     private let scoreboardService = ScoreboardService()
-    
+    private var cancellables = Swift.Set<AnyCancellable>()
+
     init(gameSettings: GameSettings) {
         self.gameSettings = gameSettings
         self.currentMatch = Match(
             team1Player1: gameSettings.team1Player1,
             team1Player2: gameSettings.team1Player2,
             team2Player1: gameSettings.team2Player1,
-            team2Player2: gameSettings.team2Player2
+            team2Player2: gameSettings.team2Player2,
+            team1Side: gameSettings.team1Side
         )
         loadHistory()
+
+        // Keep current match side in sync when changed via Settings
+        gameSettings.$team1Side
+            .dropFirst()
+            .sink { [weak self] newSide in
+                self?.currentMatch.team1Side = newSide
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Score Increment
@@ -138,7 +149,18 @@ class ScoreManager: ObservableObject {
         
         // Rotate serve after each game
         currentMatch.rotateServe()
-        
+
+        // After the first game, ask which player from the now-serving team will serve
+        let totalGames = currentMatch.sets.reduce(0) { $0 + $1.team1Games + $1.team2Games }
+        if totalGames == 1 {
+            pendingServeSelection = true
+        }
+
+        // If we just entered a tiebreak (6-6), assign the serving player from match state
+        if currentMatch.currentSet.isTiebreak && currentMatch.currentSet.tiebreakServingPlayer == nil {
+            currentMatch.currentSet.tiebreakServingPlayer = currentMatch.servingPlayer
+        }
+
         // Check if set is completed
         if currentMatch.currentSet.isCompleted {
             handleSetCompletion()
@@ -150,6 +172,11 @@ class ScoreManager: ObservableObject {
     
     func changeServer() {
         currentMatch.rotateServe()
+    }
+
+    func selectServer(_ playerCode: String) {
+        currentMatch.servingPlayer = playerCode
+        currentMatch.servingTeam = (playerCode == "A" || playerCode == "B") ? 1 : 2
     }
     
     private func handleSetCompletion() {
@@ -203,14 +230,17 @@ class ScoreManager: ObservableObject {
     
     // MARK: - Match Management
     
-    func startNewMatch() {
+    func startNewMatch(servingTeam: Int = 1, servingPlayer: String = "A") {
         // Save current match if it has any progress
-        if currentMatch.currentSet.team1Games > 0 || currentMatch.currentSet.team2Games > 0 || 
+        if currentMatch.currentSet.team1Games > 0 || currentMatch.currentSet.team2Games > 0 ||
            currentMatch.currentGame.team1Points != .love || currentMatch.currentGame.team2Points != .love {
             saveMatchToHistory()
         }
-        
-        currentMatch = matchWithCurrentPlayers()
+
+        var match = matchWithCurrentPlayers()
+        match.servingTeam = servingTeam
+        match.servingPlayer = servingPlayer
+        currentMatch = match
         undoStack.removeAll()
     }
 
@@ -224,7 +254,8 @@ class ScoreManager: ObservableObject {
             team1Player1: gameSettings.team1Player1,
             team1Player2: gameSettings.team1Player2,
             team2Player1: gameSettings.team2Player1,
-            team2Player2: gameSettings.team2Player2
+            team2Player2: gameSettings.team2Player2,
+            team1Side: gameSettings.team1Side
         )
     }
     
@@ -273,18 +304,20 @@ class ScoreManager: ObservableObject {
         // Format the current game score
         let scoreText = scoreboardService.formatGameScore(match: currentMatch)
         
-        // Determine serving team
-        var servingTeam: Int? = nil
+        // Determine which side the serving team is on
+        let servingTeam: Int?
         if currentMatch.currentSet.isTiebreak {
-            // For tiebreak, use the tiebreak serving team
             servingTeam = currentMatch.currentSet.getTiebreakServingTeam()
         } else {
-            // For regular game, use the match serving team
             servingTeam = currentMatch.servingTeam
         }
-        
+        let team1IsLeft = currentMatch.currentTeam1Side == "L"
+        let servingIsOnLeft: Bool? = servingTeam.map { team in
+            team == 1 ? team1IsLeft : !team1IsLeft
+        }
+
         // Send to scoreboard
-        scoreboardService.sendScore(text: scoreText, ipAddress: gameSettings.scoreboardIP, servingTeam: servingTeam)
+        scoreboardService.sendScore(text: scoreText, ipAddress: gameSettings.scoreboardIP, servingIsOnLeft: servingIsOnLeft)
     }
     
     private func sendSetScoreToScoreboard() {

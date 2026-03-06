@@ -54,7 +54,7 @@ struct Set: Codable, Identifiable {
         if team1Games == 6 && team2Games == 6 && !isTiebreak {
             isTiebreak = true
             tiebreakScore = TiebreakScore(team1: 0, team2: 0)
-            tiebreakServingPlayer = "A" // Start with Player A
+            // tiebreakServingPlayer is set by ScoreManager after rotating serve
             tiebreakServeCount = 0
             tiebreakTotalPoints = 0
             return
@@ -105,13 +105,8 @@ struct Set: Codable, Identifiable {
         tiebreakServeCount += 1
         
         // Determine how many serves this player should have
-        // Pattern: A(1) -> C(2) -> B(2) -> D(2) -> A(2) -> C(2) -> B(2) -> D(2)...
-        let servesForThisPlayer: Int
-        if tiebreakServingPlayer == "A" && tiebreakTotalPoints == 1 {
-            servesForThisPlayer = 1 // A serves once on first point
-        } else {
-            servesForThisPlayer = 2 // All other serves are 2 points
-        }
+        // The first player to serve in the tiebreak serves 1 point, then all others serve 2
+        let servesForThisPlayer = tiebreakTotalPoints == 1 ? 1 : 2
         
         // If player has completed their serves, move to next player
         if tiebreakServeCount >= servesForThisPlayer {

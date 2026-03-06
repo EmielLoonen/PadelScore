@@ -24,8 +24,9 @@ struct Match: Codable, Identifiable {
     var team1Player2: String
     var team2Player1: String
     var team2Player2: String
+    var team1Side: String // "L" or "R"; team 2 gets the opposite
 
-    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "") {
+    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R") {
         self.id = id
         self.startDate = startDate
         self.endDate = endDate
@@ -42,7 +43,14 @@ struct Match: Codable, Identifiable {
         self.team1Player2 = team1Player2
         self.team2Player1 = team2Player1
         self.team2Player2 = team2Player2
+        self.team1Side = team1Side
     }
+
+    // Sides switch after every set
+    var currentTeam1Side: String {
+        currentSetIndex % 2 == 0 ? team1Side : (team1Side == "L" ? "R" : "L")
+    }
+    var currentTeam2Side: String { currentTeam1Side == "L" ? "R" : "L" }
     
     mutating func rotateServe() {
         // Rotate serve: A (Team 1) -> C (Team 2) -> B (Team 1) -> D (Team 2) -> A...

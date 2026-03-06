@@ -39,8 +39,9 @@ struct GameSettingsData: Codable {
     var team1Player2: String
     var team2Player1: String
     var team2Player2: String
+    var team1Side: String
 
-    init(scoringMode: ScoringMode = .goldenPoint, scoreboardEnabled: Bool = false, scoreboardIP: String = "", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "") {
+    init(scoringMode: ScoringMode = .goldenPoint, scoreboardEnabled: Bool = false, scoreboardIP: String = "", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R") {
         self.scoringMode = scoringMode
         self.scoreboardEnabled = scoreboardEnabled
         self.scoreboardIP = scoreboardIP
@@ -48,6 +49,7 @@ struct GameSettingsData: Codable {
         self.team1Player2 = team1Player2
         self.team2Player1 = team2Player1
         self.team2Player2 = team2Player2
+        self.team1Side = team1Side
     }
 }
 
@@ -84,6 +86,10 @@ class GameSettings: ObservableObject {
         didSet { save() }
     }
 
+    @Published var team1Side: String {
+        didSet { save() }
+    }
+
     private let settingsKey = "PadelScoreGameSettings"
 
     init() {
@@ -96,6 +102,7 @@ class GameSettings: ObservableObject {
             self.team1Player2 = decoded.team1Player2
             self.team2Player1 = decoded.team2Player1
             self.team2Player2 = decoded.team2Player2
+            self.team1Side = decoded.team1Side
         } else {
             self.scoringMode = .goldenPoint
             self.scoreboardEnabled = false
@@ -104,6 +111,7 @@ class GameSettings: ObservableObject {
             self.team1Player2 = ""
             self.team2Player1 = ""
             self.team2Player2 = ""
+            self.team1Side = "R"
             save()
         }
     }
@@ -116,7 +124,8 @@ class GameSettings: ObservableObject {
             team1Player1: team1Player1,
             team1Player2: team1Player2,
             team2Player1: team2Player1,
-            team2Player2: team2Player2
+            team2Player2: team2Player2,
+            team1Side: team1Side
         )
         if let encoded = try? JSONEncoder().encode(settingsData) {
             UserDefaults.standard.set(encoded, forKey: settingsKey)

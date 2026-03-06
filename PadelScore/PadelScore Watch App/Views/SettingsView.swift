@@ -23,6 +23,13 @@ struct SettingsView: View {
                     ))
                 }
                 
+                Section("Court Side") {
+                    Picker("Team 1 Side", selection: $gameSettings.team1Side) {
+                        Text("Left").tag("L")
+                        Text("Right").tag("R")
+                    }
+                }
+
                 Section("Scoreboard") {
                     Toggle("Enable Scoreboard", isOn: $gameSettings.scoreboardEnabled)
 
