@@ -1,0 +1,10 @@
+# Xcode
+*.xcodeproj/.claude/
+xcuserdata/
+*.xcuserstate
+DerivedData/
+*.moved-aside
+*.pbxuser
+
+# macOS
+.DS_Store
