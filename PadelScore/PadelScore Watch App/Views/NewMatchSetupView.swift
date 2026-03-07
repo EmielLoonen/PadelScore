@@ -19,6 +19,7 @@ struct NewMatchSetupView: View {
     @State private var step = 1
     @State private var servingTeam = 1
     @State private var servingPlayer = "A"
+    @State private var startingSide = "R" // "L" or "R"
 
     var body: some View {
         NavigationStack {
@@ -51,7 +52,7 @@ struct NewMatchSetupView: View {
                         Button("Cancel") { dismiss() }
                     }
                 }
-            } else {
+            } else if step == 2 {
                 List {
                     Section("Who serves first?") {
                         ForEach([
@@ -76,21 +77,72 @@ struct NewMatchSetupView: View {
                         }
                     }
                     Section {
-                        Button("Start Match") {
-                            gameSettings.team1Player1 = player1
-                            gameSettings.team1Player2 = player2
-                            gameSettings.team2Player1 = player3
-                            gameSettings.team2Player2 = player4
-                            scoreManager.startNewMatch(servingTeam: servingTeam, servingPlayer: servingPlayer)
-                            dismiss()
-                        }
-                        .frame(maxWidth: .infinity, alignment: .center)
+                        Button("Next") { step = 3 }
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
                 .navigationTitle("Who Serves?")
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button("Back") { step = 1 }
+                    }
+                }
+            } else {
+                // Step 3: Starting side selection
+                List {
+                    Section("Starting side for serving team?") {
+                        Button {
+                            startingSide = "L"
+                        } label: {
+                            HStack {
+                                Text("Left side")
+                                Spacer()
+                                if startingSide == "L" {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        }
+                        
+                        Button {
+                            startingSide = "R"
+                        } label: {
+                            HStack {
+                                Text("Right side")
+                                Spacer()
+                                if startingSide == "R" {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        }
+                    }
+                    Section {
+                        Button("Start Match") {
+                            gameSettings.team1Player1 = player1
+                            gameSettings.team1Player2 = player2
+                            gameSettings.team2Player1 = player3
+                            gameSettings.team2Player2 = player4
+                            
+                            // Set the side based on which team is serving
+                            if servingTeam == 1 {
+                                gameSettings.team1Side = startingSide
+                            } else {
+                                // If team 2 is serving, they start on the selected side
+                                // so team 1 gets the opposite side
+                                gameSettings.team1Side = startingSide == "L" ? "R" : "L"
+                            }
+                            
+                            scoreManager.startNewMatch(servingTeam: servingTeam, servingPlayer: servingPlayer)
+                            dismiss()
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                }
+                .navigationTitle("Starting Side?")
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Back") { step = 2 }
                     }
                 }
             }

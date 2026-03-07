@@ -9,38 +9,78 @@ import Foundation
 
 class ScoreboardService {
     
-    /// Formats the current game score as a string, ordered left-to-right by court side.
-    func formatGameScore(match: Match) -> String {
+    /// Formats the current game score as a JSON array with colored text segments.
+    /// Team 1 scores are colored blue (0000FF) and Team 2 scores are colored green (00FF00).
+    func formatGameScore(match: Match) -> [[String: String]] {
         let team1IsLeft = match.currentTeam1Side == "L"
+        
+        var result: [[String: String]] = []
+        
         if match.currentSet.isTiebreak {
             if let tiebreak = match.currentSet.tiebreakScore {
-                return team1IsLeft
-                    ? "\(tiebreak.team1)-\(tiebreak.team2)"
-                    : "\(tiebreak.team2)-\(tiebreak.team1)"
+                if team1IsLeft {
+                    result.append(["t": "\(tiebreak.team1)", "c": "0000FF"])
+                    result.append(["t": "-", "c": "FFFFFF"])
+                    result.append(["t": "\(tiebreak.team2)", "c": "00FF00"])
+                } else {
+                    result.append(["t": "\(tiebreak.team2)", "c": "00FF00"])
+                    result.append(["t": "-", "c": "FFFFFF"])
+                    result.append(["t": "\(tiebreak.team1)", "c": "0000FF"])
+                }
+            } else {
+                result.append(["t": "0", "c": "0000FF"])
+                result.append(["t": "-", "c": "FFFFFF"])
+                result.append(["t": "0", "c": "00FF00"])
             }
-            return "0-0"
+        } else {
+            let team1Score = match.currentGame.team1Points.displayValue
+            let team2Score = match.currentGame.team2Points.displayValue
+            
+            if team1IsLeft {
+                result.append(["t": team1Score, "c": "0000FF"])
+                result.append(["t": "-", "c": "FFFFFF"])
+                result.append(["t": team2Score, "c": "00FF00"])
+            } else {
+                result.append(["t": team2Score, "c": "00FF00"])
+                result.append(["t": "-", "c": "FFFFFF"])
+                result.append(["t": team1Score, "c": "0000FF"])
+            }
         }
-        let team1Score = match.currentGame.team1Points.displayValue
-        let team2Score = match.currentGame.team2Points.displayValue
-        return team1IsLeft ? "\(team1Score)-\(team2Score)" : "\(team2Score)-\(team1Score)"
+        
+        return result
     }
 
-    /// Formats the current set score as a string with match score, ordered left-to-right by court side.
-    func formatSetScore(match: Match) -> String {
+    /// Formats the current set score as a JSON array with colored text segments.
+    /// Team 1 scores are colored blue (0000FF) and Team 2 scores are colored green (00FF00).
+    func formatSetScore(match: Match) -> [[String: String]] {
         let team1IsLeft = match.currentTeam1Side == "L"
         let leftGames  = team1IsLeft ? match.currentSet.team1Games : match.currentSet.team2Games
         let rightGames = team1IsLeft ? match.currentSet.team2Games : match.currentSet.team1Games
         let leftSets   = team1IsLeft ? match.team1Sets : match.team2Sets
         let rightSets  = team1IsLeft ? match.team2Sets : match.team1Sets
-        return "\(leftGames)-\(rightGames) | \(leftSets)-\(rightSets)"
+        
+        // Determine colors for left and right sides
+        let leftColor = team1IsLeft ? "0000FF" : "00FF00"
+        let rightColor = team1IsLeft ? "00FF00" : "0000FF"
+        
+        var result: [[String: String]] = []
+        result.append(["t": "\(leftGames)", "c": leftColor])
+        result.append(["t": "-", "c": "FFFFFF"])
+        result.append(["t": "\(rightGames)", "c": rightColor])
+        result.append(["t": " | ", "c": "FFFFFF"])
+        result.append(["t": "\(leftSets)", "c": leftColor])
+        result.append(["t": "-", "c": "FFFFFF"])
+        result.append(["t": "\(rightSets)", "c": rightColor])
+        
+        return result
     }
 
     /// Sends the score to the scoreboard via HTTP POST.
     /// - Parameters:
-    ///   - text: The score text to display
+    ///   - textArray: The score text array with color information
     ///   - ipAddress: The IP address of the scoreboard
     ///   - servingIsOnLeft: true if the serving team is on the left side of the court, false for right, nil if unknown
-    func sendScore(text: String, ipAddress: String, servingIsOnLeft: Bool?) {
+    func sendScore(textArray: [[String: String]], ipAddress: String, servingIsOnLeft: Bool?) {
         // Validate IP address
         guard !ipAddress.isEmpty else { return }
         
@@ -49,9 +89,9 @@ class ScoreboardService {
             return
         }
         
-        // Create JSON payload with text, duration, and optional draw property
+        // Create JSON payload with text array, duration, and optional draw property
         var payload: [String: Any] = [
-            "text": text,
+            "text": textArray,
             "duration": 10
         ]
         
@@ -99,9 +139,9 @@ class ScoreboardService {
     
     /// Sends the set score to the scoreboard via HTTP POST
     /// - Parameters:
-    ///   - text: The set score text to display
+    ///   - textArray: The set score text array with color information
     ///   - ipAddress: The IP address of the scoreboard
-    func sendSetScore(text: String, ipAddress: String) {
+    func sendSetScore(textArray: [[String: String]], ipAddress: String) {
         // Validate IP address
         guard !ipAddress.isEmpty else { return }
         
@@ -110,9 +150,9 @@ class ScoreboardService {
             return
         }
         
-        // Create JSON payload with text and duration
+        // Create JSON payload with text array and duration
         let payload: [String: Any] = [
-            "text": text,
+            "text": textArray,
             "duration": 2
         ]
         

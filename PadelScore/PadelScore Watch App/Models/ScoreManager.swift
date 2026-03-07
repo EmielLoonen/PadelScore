@@ -302,7 +302,7 @@ class ScoreManager: ObservableObject {
         guard !gameSettings.scoreboardIP.isEmpty else { return }
         
         // Format the current game score
-        let scoreText = scoreboardService.formatGameScore(match: currentMatch)
+        let scoreTextArray = scoreboardService.formatGameScore(match: currentMatch)
         
         // Determine which side the serving team is on
         let servingTeam: Int?
@@ -317,7 +317,7 @@ class ScoreManager: ObservableObject {
         }
 
         // Send to scoreboard
-        scoreboardService.sendScore(text: scoreText, ipAddress: gameSettings.scoreboardIP, servingIsOnLeft: servingIsOnLeft)
+        scoreboardService.sendScore(textArray: scoreTextArray, ipAddress: gameSettings.scoreboardIP, servingIsOnLeft: servingIsOnLeft)
     }
     
     private func sendSetScoreToScoreboard() {
@@ -328,10 +328,10 @@ class ScoreManager: ObservableObject {
         guard !gameSettings.scoreboardIP.isEmpty else { return }
         
         // Format the current set score
-        let setScoreText = scoreboardService.formatSetScore(match: currentMatch)
+        let setScoreTextArray = scoreboardService.formatSetScore(match: currentMatch)
         
         // Send to scoreboard
-        scoreboardService.sendSetScore(text: setScoreText, ipAddress: gameSettings.scoreboardIP)
+        scoreboardService.sendSetScore(textArray: setScoreTextArray, ipAddress: gameSettings.scoreboardIP)
     }
 }
 
