@@ -13,8 +13,10 @@ class ScoreManager: ObservableObject {
     @Published var currentMatch: Match
     @Published var matchHistory: [Match] = []
     @Published var pendingServeSelection = false
-    
+    @Published var submittedMatchIds: Set<UUID> = []
+
     private let historyKey = "PadelScoreMatchHistory"
+    private let submittedKey = "PadelScoreSubmittedMatches"
     private var undoStack: [Match] = []
     var gameSettings: GameSettings
     private let scoreboardService = ScoreboardService()
@@ -30,6 +32,7 @@ class ScoreManager: ObservableObject {
             team1Side: gameSettings.team1Side
         )
         loadHistory()
+        loadSubmittedIds()
 
         // Keep current match side in sync when changed via Settings
         gameSettings.$team1Side
@@ -230,7 +233,7 @@ class ScoreManager: ObservableObject {
     
     // MARK: - Match Management
     
-    func startNewMatch(servingTeam: Int = 1, servingPlayer: String = "A") {
+    func startNewMatch(servingTeam: Int = 1, servingPlayer: String = "A", playerA: Player? = nil, playerB: Player? = nil, playerC: Player? = nil, playerD: Player? = nil, watchCode: String? = nil) {
         // Save current match if it has any progress
         if currentMatch.currentSet.team1Games > 0 || currentMatch.currentSet.team2Games > 0 ||
            currentMatch.currentGame.team1Points != .love || currentMatch.currentGame.team2Points != .love {
@@ -240,6 +243,15 @@ class ScoreManager: ObservableObject {
         var match = matchWithCurrentPlayers()
         match.servingTeam = servingTeam
         match.servingPlayer = servingPlayer
+        match.watchCode = watchCode
+        match.team1Player1Id = playerA?.id
+        match.team1Player1Type = playerA?.type
+        match.team1Player2Id = playerB?.id
+        match.team1Player2Type = playerB?.type
+        match.team2Player1Id = playerC?.id
+        match.team2Player1Type = playerC?.type
+        match.team2Player2Id = playerD?.id
+        match.team2Player2Type = playerD?.type
         currentMatch = match
         undoStack.removeAll()
     }
@@ -290,6 +302,20 @@ class ScoreManager: ObservableObject {
     func clearHistory() {
         matchHistory.removeAll()
         UserDefaults.standard.removeObject(forKey: historyKey)
+    }
+
+    func markMatchSubmitted(id: UUID) {
+        submittedMatchIds.insert(id)
+        if let encoded = try? JSONEncoder().encode(Array(submittedMatchIds).map { $0.uuidString }) {
+            UserDefaults.standard.set(encoded, forKey: submittedKey)
+        }
+    }
+
+    private func loadSubmittedIds() {
+        if let data = UserDefaults.standard.data(forKey: submittedKey),
+           let strings = try? JSONDecoder().decode([String].self, from: data) {
+            submittedMatchIds = Set(strings.compactMap { UUID(uuidString: $0) })
+        }
     }
     
     // MARK: - Scoreboard Integration

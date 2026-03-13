@@ -119,7 +119,33 @@ struct MatchRowView: View {
 struct MatchDetailView: View {
     let match: Match
     @Environment(\.dismiss) var dismiss
-    
+    @EnvironmentObject var scoreManager: ScoreManager
+
+    private let matchResultService = MatchResultService()
+    @State private var submitState: SubmitState = .idle
+    @State private var showResubmitAlert = false
+
+    enum SubmitState {
+        case idle, loading, success, error(String)
+    }
+
+    private var alreadySubmitted: Bool {
+        scoreManager.submittedMatchIds.contains(match.id)
+    }
+
+    private func performSubmit() {
+        Task {
+            submitState = .loading
+            do {
+                try await matchResultService.submitMatchResult(match: match)
+                scoreManager.markMatchSubmitted(id: match.id)
+                submitState = .success
+            } catch {
+                submitState = .error(error.localizedDescription)
+            }
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -196,6 +222,66 @@ struct MatchDetailView: View {
                     InfoRow(label: "Duration", value: match.formattedDuration)
                     
                     InfoRow(label: "Final Score", value: match.finalScore)
+                }
+
+                // Submit score (only available when match was linked to a court code)
+                if match.watchCode != nil {
+                    Divider()
+
+                    Button {
+                        if alreadySubmitted {
+                            showResubmitAlert = true
+                        } else {
+                            performSubmit()
+                        }
+                    } label: {
+                        switch submitState {
+                        case .idle:
+                            if alreadySubmitted {
+                                Label("Submitted", systemImage: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            } else {
+                                Label("Submit Score", systemImage: "paperplane.fill")
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
+                        case .loading:
+                            HStack {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .scaleEffect(0.8)
+                                Text("Submitting...")
+                            }
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        case .success:
+                            Label("Submitted", systemImage: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        case .error:
+                            Label("Try Again", systemImage: "arrow.clockwise")
+                                .foregroundColor(.red)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
+                    }
+                    .disabled({
+                        if case .loading = submitState { return true }
+                        return false
+                    }())
+                    .alert("Already Submitted", isPresented: $showResubmitAlert) {
+                        Button("Cancel", role: .cancel) { }
+                        Button("Submit Again", role: .destructive) {
+                            performSubmit()
+                        }
+                    } message: {
+                        Text("Scores for this match have already been submitted. Submit again?")
+                    }
+
+                    if case .error(let message) = submitState {
+                        Text(message)
+                            .font(.caption2)
+                            .foregroundColor(.red)
+                            .multilineTextAlignment(.center)
+                    }
                 }
             }
             .padding()

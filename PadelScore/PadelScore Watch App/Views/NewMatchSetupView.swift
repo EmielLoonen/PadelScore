@@ -22,7 +22,7 @@ struct NewMatchSetupView: View {
     @State private var servingTeam = 1
     @State private var servingPlayer = "A"
     @State private var startingSide = "R" // "L" or "R"
-    @State private var courtCode = ""
+    @State private var courtCode: String
     @State private var isLoadingPlayers = false
     @State private var loadError: String?
     @State private var showCourtCodeEntry = false
@@ -34,6 +34,7 @@ struct NewMatchSetupView: View {
     
     init(gameSettings: GameSettings) {
         self.gameSettings = gameSettings
+        _courtCode = State(initialValue: gameSettings.lastWatchCode)
     }
     
     var body: some View {
@@ -234,10 +235,15 @@ struct NewMatchSetupView: View {
                                 gameSettings.team1Side = startingSide == "L" ? "R" : "L"
                             }
                             
-                            scoreManager.startNewMatch(servingTeam: servingTeam, servingPlayer: servingPlayer)
-                            
-                            // TODO: Send player IDs to backend for stats tracking
-                            // You can access: playerA.id, playerB.id, playerC.id, playerD.id
+                            scoreManager.startNewMatch(
+                                servingTeam: servingTeam,
+                                servingPlayer: servingPlayer,
+                                playerA: playerA,
+                                playerB: playerB,
+                                playerC: playerC,
+                                playerD: playerD,
+                                watchCode: courtCode.isEmpty ? nil : courtCode
+                            )
                             
                             dismiss()
                         }
@@ -342,6 +348,7 @@ struct NewMatchSetupView: View {
                 playerD = teams.team2Player2
                 allKnownPlayers = teams.allPlayers
                 saveKnownPlayers() // Persist for next time
+                gameSettings.lastWatchCode = courtCode // Persist court code for next match
                 isLoadingPlayers = false
                 showCourtCodeEntry = false
             }

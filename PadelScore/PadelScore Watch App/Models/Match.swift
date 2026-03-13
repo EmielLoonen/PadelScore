@@ -25,8 +25,18 @@ struct Match: Codable, Identifiable {
     var team2Player1: String
     var team2Player2: String
     var team1Side: String // "L" or "R"; team 2 gets the opposite
+    // Player IDs and types for API submission (optional for backwards compatibility)
+    var watchCode: String?
+    var team1Player1Id: String?
+    var team1Player1Type: String?
+    var team1Player2Id: String?
+    var team1Player2Type: String?
+    var team2Player1Id: String?
+    var team2Player1Type: String?
+    var team2Player2Id: String?
+    var team2Player2Type: String?
 
-    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R") {
+    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", watchCode: String? = nil, team1Player1Id: String? = nil, team1Player1Type: String? = nil, team1Player2Id: String? = nil, team1Player2Type: String? = nil, team2Player1Id: String? = nil, team2Player1Type: String? = nil, team2Player2Id: String? = nil, team2Player2Type: String? = nil) {
         self.id = id
         self.startDate = startDate
         self.endDate = endDate
@@ -44,6 +54,15 @@ struct Match: Codable, Identifiable {
         self.team2Player1 = team2Player1
         self.team2Player2 = team2Player2
         self.team1Side = team1Side
+        self.watchCode = watchCode
+        self.team1Player1Id = team1Player1Id
+        self.team1Player1Type = team1Player1Type
+        self.team1Player2Id = team1Player2Id
+        self.team1Player2Type = team1Player2Type
+        self.team2Player1Id = team2Player1Id
+        self.team2Player1Type = team2Player1Type
+        self.team2Player2Id = team2Player2Id
+        self.team2Player2Type = team2Player2Type
     }
 
     // Sides switch after every set
