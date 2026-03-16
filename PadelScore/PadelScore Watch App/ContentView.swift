@@ -344,21 +344,40 @@ struct ServeSelectionView: View {
     var body: some View {
         let match = scoreManager.currentMatch
         let team = match.servingTeam ?? 1
+        let teamColor: Color = team == 1 ? .blue : .green
         let players: [(code: String, name: String)] = team == 1
             ? [("A", match.team1Player1.isEmpty ? "Player A" : match.team1Player1),
                ("B", match.team1Player2.isEmpty ? "Player B" : match.team1Player2)]
             : [("C", match.team2Player1.isEmpty ? "Player C" : match.team2Player1),
                ("D", match.team2Player2.isEmpty ? "Player D" : match.team2Player2)]
 
-        List {
-            Section("Who serves next?") {
-                ForEach(players, id: \.code) { player in
-                    Button(player.name) {
-                        scoreManager.selectServer(player.code)
-                        dismiss()
+        GeometryReader { geometry in
+            VStack(spacing: 8) {
+                Text("Who serves?")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 8) {
+                    ForEach(players, id: \.code) { player in
+                        Button {
+                            scoreManager.selectServer(player.code)
+                            dismiss()
+                        } label: {
+                            Text(player.name)
+                                .font(.system(size: 16, weight: .bold))
+                                .minimumScaleFactor(0.5)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(teamColor)
+                        .frame(height: geometry.size.height * 0.7)
                     }
                 }
             }
+            .padding(.horizontal, 4)
+            .frame(maxHeight: .infinity, alignment: .center)
         }
         .navigationTitle("Serve")
     }

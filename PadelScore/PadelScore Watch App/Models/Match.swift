@@ -20,6 +20,7 @@ struct Match: Codable, Identifiable {
     var team2Name: String
     var servingTeam: Int? // 1 or 2, nil if not set
     var servingPlayer: String? // A, B, C, or D
+    var canonicalServingPlayer: String? // Tracks rotation position independently of user overrides
     var team1Player1: String
     var team1Player2: String
     var team2Player1: String
@@ -73,33 +74,27 @@ struct Match: Codable, Identifiable {
     
     mutating func rotateServe() {
         // Rotate serve: A (Team 1) -> C (Team 2) -> B (Team 1) -> D (Team 2) -> A...
-        guard let currentPlayer = servingPlayer else {
-            servingPlayer = "A"
-            servingTeam = 1
-            return
-        }
-        
-        switch currentPlayer {
+        // Use canonicalServingPlayer to track rotation position independently of user overrides
+        let canonical = canonicalServingPlayer ?? servingPlayer ?? "A"
+
+        switch canonical {
         case "A":
-            // Team 1 Player A -> Team 2 Player C
-            servingPlayer = "C"
+            canonicalServingPlayer = "C"
             servingTeam = 2
         case "C":
-            // Team 2 Player C -> Team 1 Player B
-            servingPlayer = "B"
+            canonicalServingPlayer = "B"
             servingTeam = 1
         case "B":
-            // Team 1 Player B -> Team 2 Player D
-            servingPlayer = "D"
+            canonicalServingPlayer = "D"
             servingTeam = 2
         case "D":
-            // Team 2 Player D -> Team 1 Player A
-            servingPlayer = "A"
+            canonicalServingPlayer = "A"
             servingTeam = 1
         default:
-            servingPlayer = "A"
+            canonicalServingPlayer = "A"
             servingTeam = 1
         }
+        servingPlayer = canonicalServingPlayer
     }
     
     var currentSet: Set {

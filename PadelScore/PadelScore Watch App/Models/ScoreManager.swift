@@ -13,7 +13,7 @@ class ScoreManager: ObservableObject {
     @Published var currentMatch: Match
     @Published var matchHistory: [Match] = []
     @Published var pendingServeSelection = false
-    @Published var submittedMatchIds: Set<UUID> = []
+    @Published var submittedMatchIds: Swift.Set<UUID> = []
 
     private let historyKey = "PadelScoreMatchHistory"
     private let submittedKey = "PadelScoreSubmittedMatches"
@@ -77,8 +77,10 @@ class ScoreManager: ObservableObject {
                 handleGameCompletion()
             }
             
-            // Send to scoreboard
-            sendScoreToScoreboard()
+            // Send to scoreboard (skip if waiting for serve selection — will send after server is confirmed)
+            if !pendingServeSelection {
+                sendScoreToScoreboard()
+            }
         }
     }
     
@@ -180,28 +182,37 @@ class ScoreManager: ObservableObject {
     func selectServer(_ playerCode: String) {
         currentMatch.servingPlayer = playerCode
         currentMatch.servingTeam = (playerCode == "A" || playerCode == "B") ? 1 : 2
+        // Now that the server is confirmed, send the 0-0 score with the correct initials
+        sendScoreToScoreboard()
     }
     
     private func handleSetCompletion() {
         guard let setWinner = currentMatch.currentSet.winner else { return }
-        
+
+        // Capture tiebreak state before advancing the set index
+        let completedSetWasTiebreak = currentMatch.currentSet.isTiebreak
+
         // Mark set as completed
         currentMatch.currentSet.isCompleted = true
         currentMatch.currentSet.winner = setWinner
-        
+
         // Start new set (matches can continue indefinitely)
         currentMatch.currentSetIndex += 1
         if currentMatch.currentSetIndex >= currentMatch.sets.count {
             currentMatch.sets.append(Set())
         }
         currentMatch.currentGame = Game()
-        
-        // Alternate serving team at start of each set
-        // Set 1 (index 0) = Team 1, Set 2 (index 1) = Team 2, Set 3 (index 2) = Team 1, etc.
-        let nextSetIndex = currentMatch.currentSetIndex
-        currentMatch.servingTeam = (nextSetIndex % 2 == 0) ? 1 : 2
-        // Set serving player based on team: Team 1 starts with A, Team 2 starts with C
-        currentMatch.servingPlayer = (currentMatch.servingTeam == 1) ? "A" : "C"
+
+        // For tiebreak sets, rotateServe() was not called before reaching here, so call it now
+        // to advance past the tiebreak server. For regular sets, rotateServe() was already
+        // called in handleGameCompletion() so the canonical rotation is already correct.
+        if completedSetWasTiebreak {
+            currentMatch.rotateServe()
+        }
+        // canonicalServingPlayer and servingPlayer are now correctly set by the rotation
+
+        // Ask which player from the serving team will serve first in the new set
+        pendingServeSelection = true
     }
     
     // MARK: - Match Control
@@ -243,6 +254,7 @@ class ScoreManager: ObservableObject {
         var match = matchWithCurrentPlayers()
         match.servingTeam = servingTeam
         match.servingPlayer = servingPlayer
+        match.canonicalServingPlayer = servingPlayer
         match.watchCode = watchCode
         match.team1Player1Id = playerA?.id
         match.team1Player1Type = playerA?.type
@@ -314,7 +326,7 @@ class ScoreManager: ObservableObject {
     private func loadSubmittedIds() {
         if let data = UserDefaults.standard.data(forKey: submittedKey),
            let strings = try? JSONDecoder().decode([String].self, from: data) {
-            submittedMatchIds = Set(strings.compactMap { UUID(uuidString: $0) })
+            submittedMatchIds = Swift.Set(strings.compactMap { UUID(uuidString: $0) })
         }
     }
     
@@ -341,9 +353,10 @@ class ScoreManager: ObservableObject {
         let servingIsOnLeft: Bool? = servingTeam.map { team in
             team == 1 ? team1IsLeft : !team1IsLeft
         }
+        let servingTeamColor: String? = servingTeam.map { $0 == 1 ? "0000FF" : "00FF00" }
 
         // Send to scoreboard
-        scoreboardService.sendScore(textArray: scoreTextArray, ipAddress: gameSettings.scoreboardIP, servingIsOnLeft: servingIsOnLeft)
+        scoreboardService.sendScore(textArray: scoreTextArray, ipAddress: gameSettings.scoreboardIP, servingIsOnLeft: servingIsOnLeft, servingTeamColor: servingTeamColor)
     }
     
     private func sendSetScoreToScoreboard() {
