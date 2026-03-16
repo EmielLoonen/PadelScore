@@ -156,18 +156,30 @@ class ScoreboardService {
     /// - Parameters:
     ///   - textArray: The set score text array with color information
     ///   - ipAddress: The IP address of the scoreboard
-    func sendSetScore(textArray: [[String: String]], ipAddress: String) {
+    ///   - team1IsLeft: true if team 1 is on the left side of the display
+    func sendSetScore(textArray: [[String: String]], ipAddress: String, team1IsLeft: Bool) {
         // Validate IP address
         guard !ipAddress.isEmpty else { return }
-        
+
         // Construct URL
         guard let url = URL(string: "http://\(ipAddress)/api/custom?name=SetScore") else {
             return
         }
-        
-        // Create JSON payload with text array and duration
+
+        // Underline colors based on which team is on which side
+        let leftColor  = team1IsLeft ? "#0000FF" : "#00FF00"
+        let rightColor = team1IsLeft ? "#00FF00" : "#0000FF"
+
+        // Four underlines: left-games, right-games, left-sets, right-sets
+        // Layout: [leftGames]-[rightGames] | [leftSets]-[rightSets]
         let payload: [String: Any] = [
             "text": textArray,
+            "draw": [
+                ["dl": [1,  7, 6,  7, leftColor]],   // left games
+                ["dl": [9,  7, 14, 7, rightColor]],  // right games
+                ["dl": [18, 7, 23, 7, leftColor]],   // left sets
+                ["dl": [26, 7, 31, 7, rightColor]]   // right sets
+            ],
             "duration": 2
         ]
         

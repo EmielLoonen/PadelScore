@@ -368,9 +368,10 @@ class ScoreManager: ObservableObject {
         
         // Format the current set score
         let setScoreTextArray = scoreboardService.formatSetScore(match: currentMatch)
-        
+        let team1IsLeft = currentMatch.currentTeam1Side == "L"
+
         // Send to scoreboard
-        scoreboardService.sendSetScore(textArray: setScoreTextArray, ipAddress: gameSettings.scoreboardIP)
+        scoreboardService.sendSetScore(textArray: setScoreTextArray, ipAddress: gameSettings.scoreboardIP, team1IsLeft: team1IsLeft)
     }
 }
 
