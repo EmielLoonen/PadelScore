@@ -24,90 +24,24 @@ struct ContentView: View {
         NavigationStack {
             GeometryReader { geometry in
                 ScrollView {
-                    VStack(spacing: 4) {
-                        // Top section - compact info
-                        VStack(spacing: 2) {
-                            // Match status
-                            if scoreManager.currentMatch.isCompleted {
-                                Text("Match Complete")
-                                    .font(.caption2)
-                                    .foregroundColor(.green)
-                            }
-
-                            // Set scores and Match scores side by side
-                            HStack(spacing: 16) {
-                                // Set scores (games for current set)
-                                VStack(spacing: 2) {
-                                    Text("Set \(scoreManager.currentMatch.currentSetIndex + 1)")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    
-                                    HStack(spacing: 8) {
-                                        Text("\(scoreManager.currentMatch.currentSet.team1Games)")
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.blue)
-
-                                        Text("-")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-
-                                        Text("\(scoreManager.currentMatch.currentSet.team2Games)")
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.green)
-                                    }
-                                }
-                                
-                                // Pipe separator
-                                Text("|")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                
-                                // Match score (sets won)
-                                VStack(spacing: 2) {
-                                    Text("Match")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                    
-                                    HStack(spacing: 8) {
-                                        Text("\(scoreManager.currentMatch.team1Sets)")
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.blue)
-
-                                        Text("-")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-
-                                        Text("\(scoreManager.currentMatch.team2Sets)")
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.green)
-                                    }
-                                }
-                            }
-                            
-                        }
-                        .padding(.top, 4)
-                        
-                        Spacer()
-                            .frame(height: geometry.size.height * 0.05)
-
-                        // Player initials row with serving indicator
-                        playerInitialsRow()
-
-                        // Current game score or tiebreak (clickable buttons) - HUGE
+                    VStack(spacing: 8) {
+                        // Score buttons — fill top of screen
                         if !scoreManager.currentMatch.isCompleted {
                             let leftTeam = scoreManager.currentMatch.currentTeam1Side == "L" ? 1 : 2
                             let rightTeam = leftTeam == 1 ? 2 : 1
                             if scoreManager.currentMatch.currentSet.isTiebreak {
                                 if let tiebreak = scoreManager.currentMatch.currentSet.tiebreakScore {
                                     HStack(spacing: 8) {
-                                        tiebreakButton(team: leftTeam, score: leftTeam == 1 ? tiebreak.team1 : tiebreak.team2, geometry: geometry)
-                                        tiebreakButton(team: rightTeam, score: rightTeam == 1 ? tiebreak.team1 : tiebreak.team2, geometry: geometry)
+                                        splitScoreButton(team: leftTeam, score: "\(leftTeam == 1 ? tiebreak.team1 : tiebreak.team2)", geometry: geometry)
+                                        splitScoreButton(team: rightTeam, score: "\(rightTeam == 1 ? tiebreak.team1 : tiebreak.team2)", geometry: geometry)
                                     }
                                 }
                             } else {
+                                let leftPoints = leftTeam == 1 ? scoreManager.currentMatch.currentGame.team1Points : scoreManager.currentMatch.currentGame.team2Points
+                                let rightPoints = rightTeam == 1 ? scoreManager.currentMatch.currentGame.team1Points : scoreManager.currentMatch.currentGame.team2Points
                                 HStack(spacing: 8) {
-                                    regularGameButton(team: leftTeam, geometry: geometry)
-                                    regularGameButton(team: rightTeam, geometry: geometry)
+                                    splitScoreButton(team: leftTeam, score: leftPoints.displayValue, isAdvantage: leftPoints == .advantage, geometry: geometry)
+                                    splitScoreButton(team: rightTeam, score: rightPoints.displayValue, isAdvantage: rightPoints == .advantage, geometry: geometry)
                                 }
                             }
                         } else {
@@ -116,7 +50,7 @@ struct ContentView: View {
                                 Text("Winner: \(scoreManager.currentMatch.winner == 1 ? scoreManager.currentMatch.team1Name : scoreManager.currentMatch.team2Name)")
                                     .font(.caption)
                                     .foregroundColor(.green)
-                                
+
                                 Button("New Match") {
                                     showingNewMatchSetup = true
                                 }
@@ -124,11 +58,60 @@ struct ContentView: View {
                                 .frame(height: geometry.size.height * 0.3)
                             }
                         }
-                        
-                        Spacer()
-                            .frame(height: geometry.size.height * 0.2)
-                        
-                        // Match control button - appears when scrolling
+
+                        // Set and match score overview (scroll down to see)
+                        VStack(spacing: 2) {
+                            if scoreManager.currentMatch.isCompleted {
+                                Text("Match Complete")
+                                    .font(.caption2)
+                                    .foregroundColor(.green)
+                            }
+
+                            HStack(spacing: 16) {
+                                VStack(spacing: 2) {
+                                    Text("Set \(scoreManager.currentMatch.currentSetIndex + 1)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+
+                                    HStack(spacing: 8) {
+                                        Text("\(scoreManager.currentMatch.currentSet.team1Games)")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.blue)
+                                        Text("-")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text("\(scoreManager.currentMatch.currentSet.team2Games)")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.green)
+                                    }
+                                }
+
+                                Text("|")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                VStack(spacing: 2) {
+                                    Text("Match")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+
+                                    HStack(spacing: 8) {
+                                        Text("\(scoreManager.currentMatch.team1Sets)")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.blue)
+                                        Text("-")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text("\(scoreManager.currentMatch.team2Sets)")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.green)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+
+                        // Match control button
                         if !scoreManager.currentMatch.isCompleted {
                             Button {
                                 showingMatchControl = true
@@ -249,38 +232,104 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func regularGameButton(team: Int, geometry: GeometryProxy) -> some View {
-        let points = team == 1 ? scoreManager.currentMatch.currentGame.team1Points
-                               : scoreManager.currentMatch.currentGame.team2Points
-        VStack(spacing: 4) {
-            Button(action: { handleButtonTap(team: team) }) {
-                Text(points.displayValue)
-                    .font(.system(size: 50, weight: .bold))
-                    .foregroundColor(points == .advantage ? .green : .primary)
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.bordered)
-            .tint(points == .advantage ? .green : .primary)
-            .frame(height: geometry.size.height * 0.5)
-            .frame(maxWidth: .infinity)
-        }
-    }
+    private func splitScoreButton(team: Int, score: String, isAdvantage: Bool = false, geometry: GeometryProxy) -> some View {
+        let match = scoreManager.currentMatch
+        let player1Code = team == 1 ? "A" : "C"
+        let player2Code = team == 1 ? "B" : "D"
+        let player1Name = team == 1 ? match.team1Player1 : match.team2Player1
+        let player2Name = team == 1 ? match.team1Player2 : match.team2Player2
+        let player1Label = player1Name.isEmpty ? "P1" : player1Name
+        let player2Label = player2Name.isEmpty ? "P2" : player2Name
+        let teamColor: Color = team == 1 ? .blue : .green
+        let height = geometry.size.height * 0.8
 
-    @ViewBuilder
-    private func tiebreakButton(team: Int, score: Int, geometry: GeometryProxy) -> some View {
-        VStack(spacing: 4) {
-            Button(action: { handleButtonTap(team: team) }) {
-                Text("\(score)")
-                    .font(.system(size: 50, weight: .bold))
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
+        // Serving player (tiebreak-aware)
+        let servingPlayer = match.currentSet.isTiebreak
+            ? (match.currentSet.tiebreakServingPlayer ?? match.servingPlayer ?? "A")
+            : (match.servingPlayer ?? "A")
+        let p1Serving = servingPlayer == player1Code
+        let p2Serving = servingPlayer == player2Code
+
+        ZStack {
+            // Split background: top and bottom halves have slightly different tints
+            VStack(spacing: 0) {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(teamColor.opacity(0.12))
+                    .padding(.bottom, 0.5)
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(teamColor.opacity(0.06))
+                    .padding(.top, 0.5)
             }
-            .buttonStyle(.bordered)
-            .tint(.blue)
-            .frame(height: geometry.size.height * 0.5)
-            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            VStack(spacing: 0) {
+                // Top half — player 1
+                Button {
+                    handleButtonTap(team: team, scoringPlayer: player1Code)
+                } label: {
+                    Color.white.opacity(0.001)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: height / 2)
+                        .overlay(alignment: .topLeading) {
+                            HStack(spacing: 4) {
+                                if p1Serving {
+                                    Circle()
+                                        .fill(teamColor)
+                                        .frame(width: 6, height: 6)
+                                }
+                                Text(player1Label)
+                                    .font(.caption)
+                                    .fontWeight(p1Serving ? .bold : .semibold)
+                                    .foregroundColor(p1Serving ? teamColor : teamColor.opacity(0.5))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
+                            }
+                            .padding(.top, 6)
+                            .padding(.leading, 6)
+                        }
+                }
+                .buttonStyle(.plain)
+
+                Rectangle()
+                    .fill(teamColor.opacity(0.3))
+                    .frame(height: 1)
+
+                // Bottom half — player 2
+                Button {
+                    handleButtonTap(team: team, scoringPlayer: player2Code)
+                } label: {
+                    Color.white.opacity(0.001)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: height / 2)
+                        .overlay(alignment: .bottomLeading) {
+                            HStack(spacing: 4) {
+                                if p2Serving {
+                                    Circle()
+                                        .fill(teamColor)
+                                        .frame(width: 6, height: 6)
+                                }
+                                Text(player2Label)
+                                    .font(.caption)
+                                    .fontWeight(p2Serving ? .bold : .semibold)
+                                    .foregroundColor(p2Serving ? teamColor : teamColor.opacity(0.5))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
+                            }
+                            .padding(.bottom, 6)
+                            .padding(.leading, 6)
+                        }
+                }
+                .buttonStyle(.plain)
+            }
+
+            // Score centered, non-interactive
+            Text(score)
+                .font(.system(size: 44, weight: .bold))
+                .foregroundColor(isAdvantage ? .green : .primary)
+                .allowsHitTesting(false)
         }
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(teamColor.opacity(0.4), lineWidth: 1))
+        .frame(height: height)
     }
 
     private func initials(_ name: String) -> String {
@@ -297,13 +346,13 @@ struct ContentView: View {
         return combined.isEmpty ? nil : combined
     }
 
-    private func handleButtonTap(team: Int) {
+    private func handleButtonTap(team: Int, scoringPlayer: String? = nil) {
         let now = Date()
-        
+
         // Cancel any pending increment
         pendingIncrementTask?.cancel()
         pendingIncrementTask = nil
-        
+
         // Check if this is a double tap (within 0.4 seconds and same team)
         if let lastTime = lastTapTime,
            let lastTeam = lastTapTeam,
@@ -311,25 +360,22 @@ struct ContentView: View {
            now.timeIntervalSince(lastTime) < 0.4 {
             // Double tap detected - undo the previous action (before the double tap started)
             scoreManager.undo()
-            // Clear the tap tracking
             lastTapTime = nil
             lastTapTeam = nil
             return
         }
-        
+
         // Single tap - delay increment slightly to detect potential double tap
         lastTapTime = now
         lastTapTeam = team
-        
+
         let teamToIncrement = team
+        let playerToScore = scoringPlayer
         pendingIncrementTask = Task {
-            // Wait a short time to see if there's a second tap
             try? await Task.sleep(nanoseconds: 350_000_000) // 0.35 seconds
-            
-            // Only increment if task wasn't cancelled (no double tap detected)
             if !Task.isCancelled {
                 await MainActor.run {
-                    scoreManager.incrementPoint(for: teamToIncrement)
+                    scoreManager.incrementPoint(for: teamToIncrement, scoringPlayer: playerToScore)
                     pendingIncrementTask = nil
                 }
             }

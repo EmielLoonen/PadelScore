@@ -45,11 +45,33 @@ class ScoreManager: ObservableObject {
     
     // MARK: - Score Increment
     
-    func incrementPoint(for team: Int) {
+    func incrementPoint(for team: Int, scoringPlayer: String? = nil) {
         guard !currentMatch.isCompleted else { return }
-        
+
         // Save current state for undo
         saveStateForUndo()
+
+        // Log which player scored, capturing full context at time of scoring
+        let isTiebreak = currentMatch.currentSet.isTiebreak
+        let pointServingPlayer = isTiebreak
+            ? (currentMatch.currentSet.tiebreakServingPlayer ?? currentMatch.servingPlayer)
+            : currentMatch.servingPlayer
+        currentMatch.pointLog.append(PointRecord(
+            playerCode: scoringPlayer,
+            team: team,
+            servingPlayer: pointServingPlayer,
+            servingTeam: currentMatch.servingTeam,
+            isTiebreak: isTiebreak,
+            gameTeam1PointsBefore: isTiebreak ? nil : currentMatch.currentGame.team1Points.rawValue,
+            gameTeam2PointsBefore: isTiebreak ? nil : currentMatch.currentGame.team2Points.rawValue,
+            tiebreakTeam1Before: isTiebreak ? currentMatch.currentSet.tiebreakScore?.team1 : nil,
+            tiebreakTeam2Before: isTiebreak ? currentMatch.currentSet.tiebreakScore?.team2 : nil,
+            setTeam1GamesBefore: currentMatch.currentSet.team1Games,
+            setTeam2GamesBefore: currentMatch.currentSet.team2Games,
+            setNumber: currentMatch.currentSetIndex,
+            matchTeam1SetsBefore: currentMatch.team1Sets,
+            matchTeam2SetsBefore: currentMatch.team2Sets
+        ))
         
         let haptic = WKInterfaceDevice.current()
         

@@ -373,10 +373,7 @@ struct PlayerPickerView: View {
     /// Filter out already-selected players (except for the current position being edited)
     private var selectablePlayers: [Player] {
         // Collect IDs of already selected players
-        var selectedIDs = Swift.Set<String>()
-        for player in alreadySelectedPlayers {
-            selectedIDs.insert(player.id)
-        }
+        let selectedIDs = Swift.Set(alreadySelectedPlayers.map { $0.id })
         
         return availablePlayers.filter { player in
             // Show players that aren't selected yet

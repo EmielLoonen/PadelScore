@@ -7,6 +7,60 @@
 
 import Foundation
 
+struct PointRecord: Codable {
+    let playerCode: String?       // A, B, C, or D; nil if not tracked
+    let team: Int                 // 1 or 2
+    let timestamp: Date
+
+    // Context at time of scoring (optional for backwards compat)
+    let servingPlayer: String?    // who was serving during this point
+    let servingTeam: Int?         // which team was serving
+    let isTiebreak: Bool          // was this a tiebreak point
+    let gameTeam1PointsBefore: String?  // Point.rawValue before the point
+    let gameTeam2PointsBefore: String?
+    let tiebreakTeam1Before: Int? // tiebreak score before (if tiebreak)
+    let tiebreakTeam2Before: Int?
+    let setTeam1GamesBefore: Int  // games in current set before the point
+    let setTeam2GamesBefore: Int
+    let setNumber: Int            // 0-indexed set number
+    let matchTeam1SetsBefore: Int // sets won before this point
+    let matchTeam2SetsBefore: Int
+
+    init(
+        playerCode: String?,
+        team: Int,
+        timestamp: Date = Date(),
+        servingPlayer: String? = nil,
+        servingTeam: Int? = nil,
+        isTiebreak: Bool = false,
+        gameTeam1PointsBefore: String? = nil,
+        gameTeam2PointsBefore: String? = nil,
+        tiebreakTeam1Before: Int? = nil,
+        tiebreakTeam2Before: Int? = nil,
+        setTeam1GamesBefore: Int = 0,
+        setTeam2GamesBefore: Int = 0,
+        setNumber: Int = 0,
+        matchTeam1SetsBefore: Int = 0,
+        matchTeam2SetsBefore: Int = 0
+    ) {
+        self.playerCode = playerCode
+        self.team = team
+        self.timestamp = timestamp
+        self.servingPlayer = servingPlayer
+        self.servingTeam = servingTeam
+        self.isTiebreak = isTiebreak
+        self.gameTeam1PointsBefore = gameTeam1PointsBefore
+        self.gameTeam2PointsBefore = gameTeam2PointsBefore
+        self.tiebreakTeam1Before = tiebreakTeam1Before
+        self.tiebreakTeam2Before = tiebreakTeam2Before
+        self.setTeam1GamesBefore = setTeam1GamesBefore
+        self.setTeam2GamesBefore = setTeam2GamesBefore
+        self.setNumber = setNumber
+        self.matchTeam1SetsBefore = matchTeam1SetsBefore
+        self.matchTeam2SetsBefore = matchTeam2SetsBefore
+    }
+}
+
 struct Match: Codable, Identifiable {
     let id: UUID
     let startDate: Date
@@ -36,8 +90,9 @@ struct Match: Codable, Identifiable {
     var team2Player1Type: String?
     var team2Player2Id: String?
     var team2Player2Type: String?
+    var pointLog: [PointRecord]
 
-    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", watchCode: String? = nil, team1Player1Id: String? = nil, team1Player1Type: String? = nil, team1Player2Id: String? = nil, team1Player2Type: String? = nil, team2Player1Id: String? = nil, team2Player1Type: String? = nil, team2Player2Id: String? = nil, team2Player2Type: String? = nil) {
+    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", watchCode: String? = nil, team1Player1Id: String? = nil, team1Player1Type: String? = nil, team1Player2Id: String? = nil, team1Player2Type: String? = nil, team2Player1Id: String? = nil, team2Player1Type: String? = nil, team2Player2Id: String? = nil, team2Player2Type: String? = nil, pointLog: [PointRecord] = []) {
         self.id = id
         self.startDate = startDate
         self.endDate = endDate
@@ -64,6 +119,7 @@ struct Match: Codable, Identifiable {
         self.team2Player1Type = team2Player1Type
         self.team2Player2Id = team2Player2Id
         self.team2Player2Type = team2Player2Type
+        self.pointLog = pointLog
     }
 
     // Sides switch after every set

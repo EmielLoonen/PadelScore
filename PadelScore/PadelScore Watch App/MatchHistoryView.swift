@@ -224,6 +224,19 @@ struct MatchDetailView: View {
                     InfoRow(label: "Final Score", value: match.finalScore)
                 }
 
+                // Stats (only shown when point log has data)
+                let stats = MatchStats(match: match)
+                if stats.hasData {
+                    Divider()
+
+                    NavigationLink {
+                        MatchStatsView(match: match, stats: stats)
+                    } label: {
+                        Label("View Stats", systemImage: "chart.bar.fill")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                }
+
                 // Submit score (only available when match was linked to a court code)
                 if match.watchCode != nil {
                     Divider()

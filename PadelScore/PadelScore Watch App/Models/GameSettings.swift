@@ -99,29 +99,25 @@ class GameSettings: ObservableObject {
     private let settingsKey = "PadelScoreGameSettings"
 
     init() {
+        // Load saved settings or use defaults
+        let settingsData: GameSettingsData
         if let data = UserDefaults.standard.data(forKey: settingsKey),
            let decoded = try? JSONDecoder().decode(GameSettingsData.self, from: data) {
-            self.scoringMode = decoded.scoringMode
-            self.scoreboardEnabled = decoded.scoreboardEnabled
-            self.scoreboardIP = decoded.scoreboardIP
-            self.team1Player1 = decoded.team1Player1
-            self.team1Player2 = decoded.team1Player2
-            self.team2Player1 = decoded.team2Player1
-            self.team2Player2 = decoded.team2Player2
-            self.team1Side = decoded.team1Side
-            self.lastWatchCode = decoded.lastWatchCode
+            settingsData = decoded
         } else {
-            self.scoringMode = .goldenPoint
-            self.scoreboardEnabled = false
-            self.scoreboardIP = ""
-            self.team1Player1 = ""
-            self.team1Player2 = ""
-            self.team2Player1 = ""
-            self.team2Player2 = ""
-            self.team1Side = "R"
-            self.lastWatchCode = ""
-            save()
+            settingsData = GameSettingsData()
         }
+        
+        // Initialize all properties
+        self.scoringMode = settingsData.scoringMode
+        self.scoreboardEnabled = settingsData.scoreboardEnabled
+        self.scoreboardIP = settingsData.scoreboardIP
+        self.team1Player1 = settingsData.team1Player1
+        self.team1Player2 = settingsData.team1Player2
+        self.team2Player1 = settingsData.team2Player1
+        self.team2Player2 = settingsData.team2Player2
+        self.team1Side = settingsData.team1Side
+        self.lastWatchCode = settingsData.lastWatchCode
     }
 
     private func save() {
