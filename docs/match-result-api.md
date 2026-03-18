@@ -41,7 +41,7 @@ Submits a completed (or stopped) match result from the PadelScore watch app.
 |---|---|---|
 | `code` | string | Court position: `A` or `B` (team 1), `C` or `D` (team 2) |
 | `id` | string | Player ID from the coordinator system, or player name for guests |
-| `type` | string | `"registered"` or `"guest"` |
+| `type` | string | `"user"` (registered) or `"guest"` |
 | `name` | string | Display name |
 
 ---
@@ -159,8 +159,8 @@ Any non-2xx status code is treated as a submission failure. The watch app will s
       "team": 1,
       "name": "Team 1",
       "players": [
-        { "code": "A", "id": "user-123", "type": "registered", "name": "Alex" },
-        { "code": "B", "id": "user-456", "type": "registered", "name": "Ben" }
+        { "code": "A", "id": "user-123", "type": "user", "name": "Alex" },
+        { "code": "B", "id": "user-456", "type": "user", "name": "Ben" }
       ]
     },
     {

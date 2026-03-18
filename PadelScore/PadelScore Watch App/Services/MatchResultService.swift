@@ -165,16 +165,16 @@ class MatchResultService {
                 team: 1,
                 name: match.team1Name,
                 players: [
-                    PlayerInfoPayload(code: "A", id: match.team1Player1Id ?? match.team1Player1, type: match.team1Player1Type ?? "guest", name: match.team1Player1),
-                    PlayerInfoPayload(code: "B", id: match.team1Player2Id ?? match.team1Player2, type: match.team1Player2Type ?? "guest", name: match.team1Player2),
+                    PlayerInfoPayload(code: "A", id: match.team1Player1Id ?? match.team1Player1, type: match.team1Player1Type ?? "user", name: match.team1Player1),
+                    PlayerInfoPayload(code: "B", id: match.team1Player2Id ?? match.team1Player2, type: match.team1Player2Type ?? "user", name: match.team1Player2),
                 ]
             ),
             TeamPayload(
                 team: 2,
                 name: match.team2Name,
                 players: [
-                    PlayerInfoPayload(code: "C", id: match.team2Player1Id ?? match.team2Player1, type: match.team2Player1Type ?? "guest", name: match.team2Player1),
-                    PlayerInfoPayload(code: "D", id: match.team2Player2Id ?? match.team2Player2, type: match.team2Player2Type ?? "guest", name: match.team2Player2),
+                    PlayerInfoPayload(code: "C", id: match.team2Player1Id ?? match.team2Player1, type: match.team2Player1Type ?? "user", name: match.team2Player1),
+                    PlayerInfoPayload(code: "D", id: match.team2Player2Id ?? match.team2Player2, type: match.team2Player2Type ?? "user", name: match.team2Player2),
                 ]
             ),
         ]
