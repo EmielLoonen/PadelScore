@@ -12,7 +12,7 @@ struct ContentView: View {
     @EnvironmentObject var gameSettings: GameSettings
     @State private var showingHistory = false
     @State private var showingSettings = false
-    @State private var showingMatchControl = false
+    @State private var showingStopAlert = false
     @State private var showingMenu = false
     @State private var showingNewMatchSetup = false
     @State private var showingServeSelection = false
@@ -114,7 +114,7 @@ struct ContentView: View {
                         // Match control button
                         if !scoreManager.currentMatch.isCompleted {
                             Button {
-                                showingMatchControl = true
+                                showingStopAlert = true
                             } label: {
                                 HStack {
                                     Image(systemName: "stop.circle.fill")
@@ -150,9 +150,13 @@ struct ContentView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView(gameSettings: gameSettings)
             }
-            .sheet(isPresented: $showingMatchControl) {
-                MatchControlView()
-                    .environmentObject(scoreManager)
+            .alert("Stop Match?", isPresented: $showingStopAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Stop", role: .destructive) {
+                    scoreManager.stopMatch()
+                }
+            } message: {
+                Text("This will end the current match and save it to history.")
             }
             .sheet(isPresented: $showingMenu) {
                 MenuView(

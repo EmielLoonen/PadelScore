@@ -177,9 +177,9 @@ class ScoreManager: ObservableObject {
         // Rotate serve after each game
         currentMatch.rotateServe()
 
-        // After the first game, ask which player from the now-serving team will serve
-        let totalGames = currentMatch.sets.reduce(0) { $0 + $1.team1Games + $1.team2Games }
-        if totalGames == 1 {
+        // After the first game of each set, ask which player from the now-serving team will serve
+        let currentSetGames = currentMatch.currentSet.team1Games + currentMatch.currentSet.team2Games
+        if currentSetGames == 1 {
             pendingServeSelection = true
         }
 
