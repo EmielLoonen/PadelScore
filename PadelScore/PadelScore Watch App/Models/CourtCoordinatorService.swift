@@ -49,7 +49,14 @@ struct Player: Identifiable, Codable, Equatable {
 }
 
 class CourtCoordinatorService {
-    private let baseURL = "https://padel-coordinator-api.onrender.com/api/watch"
+    static let productionURL = "https://padel-coordinator-api.onrender.com/api/watch"
+    static let testURL       = "http://localhost:3000/api/watch"
+
+    private let baseURL: String
+
+    init(useTestServer: Bool = false) {
+        baseURL = useTestServer ? Self.testURL : Self.productionURL
+    }
     
     /// Result structure containing team assignments with full player data
     struct TeamAssignments {
@@ -83,7 +90,7 @@ class CourtCoordinatorService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.timeoutInterval = 10 // 10 second timeout
+        request.timeoutInterval = 30
         
         // Perform request
         let (data, response) = try await URLSession.shared.data(for: request)

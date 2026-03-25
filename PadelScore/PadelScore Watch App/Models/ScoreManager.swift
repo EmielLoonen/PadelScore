@@ -279,6 +279,11 @@ class ScoreManager: ObservableObject {
         match.servingPlayer = servingPlayer
         match.canonicalServingPlayer = servingPlayer
         match.watchCode = watchCode
+        if let code = watchCode {
+            match.setNumberOffset = matchHistory
+                .filter { $0.watchCode == code }
+                .reduce(0) { $0 + $1.sets.filter { $0.team1Games > 0 || $0.team2Games > 0 }.count }
+        }
         match.team1Player1Id = playerA?.id
         match.team1Player1Type = playerA?.type
         match.team1Player2Id = playerB?.id

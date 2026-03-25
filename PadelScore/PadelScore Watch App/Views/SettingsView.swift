@@ -35,6 +35,15 @@ struct SettingsView: View {
 
                     TextField("Scoreboard IP Address", text: $gameSettings.scoreboardIP)
                 }
+
+                Section("Developer") {
+                    Toggle("Use Test Server", isOn: $gameSettings.useTestServer)
+                    if gameSettings.useTestServer {
+                        Text(MatchResultService.testURL)
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                    }
+                }
             }
             .navigationTitle("Settings")
             .toolbar {

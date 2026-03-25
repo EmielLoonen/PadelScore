@@ -41,8 +41,9 @@ struct GameSettingsData: Codable {
     var team2Player2: String
     var team1Side: String
     var lastWatchCode: String
+    var useTestServer: Bool
 
-    init(scoringMode: ScoringMode = .goldenPoint, scoreboardEnabled: Bool = false, scoreboardIP: String = "", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", lastWatchCode: String = "") {
+    init(scoringMode: ScoringMode = .goldenPoint, scoreboardEnabled: Bool = false, scoreboardIP: String = "", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", lastWatchCode: String = "", useTestServer: Bool = false) {
         self.scoringMode = scoringMode
         self.scoreboardEnabled = scoreboardEnabled
         self.scoreboardIP = scoreboardIP
@@ -52,6 +53,7 @@ struct GameSettingsData: Codable {
         self.team2Player2 = team2Player2
         self.team1Side = team1Side
         self.lastWatchCode = lastWatchCode
+        self.useTestServer = useTestServer
     }
 }
 
@@ -96,6 +98,10 @@ class GameSettings: ObservableObject {
         didSet { save() }
     }
 
+    @Published var useTestServer: Bool {
+        didSet { save() }
+    }
+
     private let settingsKey = "PadelScoreGameSettings"
 
     init() {
@@ -118,6 +124,7 @@ class GameSettings: ObservableObject {
         self.team2Player2 = settingsData.team2Player2
         self.team1Side = settingsData.team1Side
         self.lastWatchCode = settingsData.lastWatchCode
+        self.useTestServer = settingsData.useTestServer
     }
 
     private func save() {
@@ -130,7 +137,8 @@ class GameSettings: ObservableObject {
             team2Player1: team2Player1,
             team2Player2: team2Player2,
             team1Side: team1Side,
-            lastWatchCode: lastWatchCode
+            lastWatchCode: lastWatchCode,
+            useTestServer: useTestServer
         )
         if let encoded = try? JSONEncoder().encode(settingsData) {
             UserDefaults.standard.set(encoded, forKey: settingsKey)

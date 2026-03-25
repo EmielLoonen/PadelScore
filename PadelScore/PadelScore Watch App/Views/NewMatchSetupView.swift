@@ -29,7 +29,7 @@ struct NewMatchSetupView: View {
     @State private var showPlayerPicker = false
     @State private var selectedPosition: String = "" // "A", "B", "C", or "D"
     
-    private let coordinatorService = CourtCoordinatorService()
+    private var coordinatorService: CourtCoordinatorService { CourtCoordinatorService(useTestServer: gameSettings.useTestServer) }
     private let knownPlayersKey = "KnownPlayers"
     
     init(gameSettings: GameSettings) {
@@ -139,6 +139,7 @@ struct NewMatchSetupView: View {
                     CourtCodeEntryView(
                         courtCode: $courtCode,
                         isLoading: $isLoadingPlayers,
+                        error: $loadError,
                         onFetch: fetchPlayersFromService
                     )
                 }
@@ -355,7 +356,20 @@ struct NewMatchSetupView: View {
         } catch {
             await MainActor.run {
                 isLoadingPlayers = false
-                loadError = "Failed to load players. Please try again."
+                if let urlError = error as? URLError {
+                    switch urlError.code {
+                    case .timedOut:
+                        loadError = "Request timed out. The server may be starting up, try again."
+                    case .notConnectedToInternet, .networkConnectionLost:
+                        loadError = "No internet connection."
+                    case .badServerResponse:
+                        loadError = "Court code not found or server error."
+                    default:
+                        loadError = "Error: \(urlError.localizedDescription)"
+                    }
+                } else {
+                    loadError = "Error: \(error.localizedDescription)"
+                }
             }
         }
     }
@@ -443,9 +457,10 @@ struct PlayerPickerView: View {
 struct CourtCodeEntryView: View {
     @Binding var courtCode: String
     @Binding var isLoading: Bool
+    @Binding var error: String?
     var onFetch: () async -> Void
     @Environment(\.dismiss) var dismiss
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -453,8 +468,17 @@ struct CourtCodeEntryView: View {
                     TextField("Court Code", text: $courtCode)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
+                        .onChange(of: courtCode) { error = nil }
                 }
-                
+
+                if let error {
+                    Section {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                }
+
                 Section {
                     Button {
                         Task {

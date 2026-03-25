@@ -22,7 +22,14 @@ enum MatchResultError: LocalizedError {
 }
 
 class MatchResultService {
-    private let baseURL = "https://padel-coordinator-api.onrender.com"
+    static let productionURL = "https://padel-coordinator-api.onrender.com"
+    static let testURL       = "http://localhost:3000"
+
+    private let baseURL: String
+
+    init(useTestServer: Bool = false) {
+        baseURL = useTestServer ? Self.testURL : Self.productionURL
+    }
 
     // MARK: - Payload types
 
@@ -165,23 +172,23 @@ class MatchResultService {
                 team: 1,
                 name: match.team1Name,
                 players: [
-                    PlayerInfoPayload(code: "A", id: match.team1Player1Id ?? match.team1Player1, type: match.team1Player1Type ?? "user", name: match.team1Player1),
-                    PlayerInfoPayload(code: "B", id: match.team1Player2Id ?? match.team1Player2, type: match.team1Player2Type ?? "user", name: match.team1Player2),
+                    PlayerInfoPayload(code: "A", id: match.team1Player1Id ?? match.team1Player1, type: match.team1Player1Type == "user" ? "registered" : "guest", name: match.team1Player1),
+                    PlayerInfoPayload(code: "B", id: match.team1Player2Id ?? match.team1Player2, type: match.team1Player2Type == "user" ? "registered" : "guest", name: match.team1Player2),
                 ]
             ),
             TeamPayload(
                 team: 2,
                 name: match.team2Name,
                 players: [
-                    PlayerInfoPayload(code: "C", id: match.team2Player1Id ?? match.team2Player1, type: match.team2Player1Type ?? "user", name: match.team2Player1),
-                    PlayerInfoPayload(code: "D", id: match.team2Player2Id ?? match.team2Player2, type: match.team2Player2Type ?? "user", name: match.team2Player2),
+                    PlayerInfoPayload(code: "C", id: match.team2Player1Id ?? match.team2Player1, type: match.team2Player1Type == "user" ? "registered" : "guest", name: match.team2Player1),
+                    PlayerInfoPayload(code: "D", id: match.team2Player2Id ?? match.team2Player2, type: match.team2Player2Type == "user" ? "registered" : "guest", name: match.team2Player2),
                 ]
             ),
         ]
 
         let setsPayload = playedSets.enumerated().map { index, set in
             SetPayload(
-                setNumber: index + 1,
+                setNumber: match.setNumberOffset + index + 1,
                 team1Games: set.team1Games,
                 team2Games: set.team2Games,
                 winner: set.winner,
@@ -212,9 +219,9 @@ class MatchResultService {
                 tiebreakTeam2Before: record.tiebreakTeam2Before,
                 setTeam1GamesBefore: record.setTeam1GamesBefore,
                 setTeam2GamesBefore: record.setTeam2GamesBefore,
-                setNumber: record.setNumber,
-                matchTeam1SetsBefore: record.matchTeam1SetsBefore,
-                matchTeam2SetsBefore: record.matchTeam2SetsBefore
+                setNumber: match.setNumberOffset + record.setNumber,
+                matchTeam1SetsBefore: match.setNumberOffset + record.matchTeam1SetsBefore,
+                matchTeam2SetsBefore: match.setNumberOffset + record.matchTeam2SetsBefore
             )
         }
 

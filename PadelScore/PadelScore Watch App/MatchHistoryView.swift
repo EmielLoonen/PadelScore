@@ -120,8 +120,9 @@ struct MatchDetailView: View {
     let match: Match
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var scoreManager: ScoreManager
+    @EnvironmentObject var gameSettings: GameSettings
 
-    private let matchResultService = MatchResultService()
+    private var matchResultService: MatchResultService { MatchResultService(useTestServer: gameSettings.useTestServer) }
     @State private var submitState: SubmitState = .idle
     @State private var showResubmitAlert = false
 
@@ -133,8 +134,9 @@ struct MatchDetailView: View {
         scoreManager.submittedMatchIds.contains(match.id)
     }
 
+    @MainActor
     private func performSubmit() {
-        Task {
+        Task { @MainActor in
             submitState = .loading
             do {
                 try await matchResultService.submitMatchResult(match: match)
@@ -242,7 +244,9 @@ struct MatchDetailView: View {
                     Divider()
 
                     Button {
-                        if alreadySubmitted {
+                        if case .error = submitState {
+                            performSubmit()
+                        } else if alreadySubmitted {
                             showResubmitAlert = true
                         } else {
                             performSubmit()

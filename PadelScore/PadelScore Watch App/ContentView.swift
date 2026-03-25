@@ -145,6 +145,7 @@ struct ContentView: View {
             .sheet(isPresented: $showingHistory) {
                 MatchHistoryView()
                     .environmentObject(scoreManager)
+                    .environmentObject(gameSettings)
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsView(gameSettings: gameSettings)

@@ -90,9 +90,10 @@ struct Match: Codable, Identifiable {
     var team2Player1Type: String?
     var team2Player2Id: String?
     var team2Player2Type: String?
+    var setNumberOffset: Int  // Set number to start from when submitting (for multi-submission matches)
     var pointLog: [PointRecord]
 
-    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", watchCode: String? = nil, team1Player1Id: String? = nil, team1Player1Type: String? = nil, team1Player2Id: String? = nil, team1Player2Type: String? = nil, team2Player1Id: String? = nil, team2Player1Type: String? = nil, team2Player2Id: String? = nil, team2Player2Type: String? = nil, pointLog: [PointRecord] = []) {
+    init(id: UUID = UUID(), startDate: Date = Date(), endDate: Date? = nil, sets: [Set] = [Set()], currentSetIndex: Int = 0, currentGame: Game = Game(), isCompleted: Bool = false, winner: Int? = nil, team1Name: String = "Team 1", team2Name: String = "Team 2", servingTeam: Int? = 1, servingPlayer: String? = "A", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", watchCode: String? = nil, team1Player1Id: String? = nil, team1Player1Type: String? = nil, team1Player2Id: String? = nil, team1Player2Type: String? = nil, team2Player1Id: String? = nil, team2Player1Type: String? = nil, team2Player2Id: String? = nil, team2Player2Type: String? = nil, setNumberOffset: Int = 0, pointLog: [PointRecord] = []) {
         self.id = id
         self.startDate = startDate
         self.endDate = endDate
@@ -119,6 +120,7 @@ struct Match: Codable, Identifiable {
         self.team2Player1Type = team2Player1Type
         self.team2Player2Id = team2Player2Id
         self.team2Player2Type = team2Player2Type
+        self.setNumberOffset = setNumberOffset
         self.pointLog = pointLog
     }
 
