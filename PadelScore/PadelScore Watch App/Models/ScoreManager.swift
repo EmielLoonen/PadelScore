@@ -234,8 +234,11 @@ class ScoreManager: ObservableObject {
         }
         // canonicalServingPlayer and servingPlayer are now correctly set by the rotation
 
-        // Ask which player from the serving team will serve first in the new set
-        pendingServeSelection = true
+        // Delay serve selection so the UI shows the updated set score first
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            self.pendingServeSelection = true
+        }
     }
     
     // MARK: - Match Control

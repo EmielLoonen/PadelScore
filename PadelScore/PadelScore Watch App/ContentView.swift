@@ -49,7 +49,7 @@ struct ContentView: View {
                             VStack(spacing: 8) {
                                 Text("Winner: \(scoreManager.currentMatch.winner == 1 ? scoreManager.currentMatch.team1Name : scoreManager.currentMatch.team2Name)")
                                     .font(.caption)
-                                    .foregroundColor(.green)
+                                    .foregroundColor(Color(red: 0.1, green: 0.95, blue: 0.45))
 
                                 Button("New Match") {
                                     showingNewMatchSetup = true
@@ -64,7 +64,7 @@ struct ContentView: View {
                             if scoreManager.currentMatch.isCompleted {
                                 Text("Match Complete")
                                     .font(.caption2)
-                                    .foregroundColor(.green)
+                                    .foregroundColor(Color(red: 0.1, green: 0.95, blue: 0.45))
                             }
 
                             HStack(spacing: 16) {
@@ -76,13 +76,13 @@ struct ContentView: View {
                                     HStack(spacing: 8) {
                                         Text("\(scoreManager.currentMatch.currentSet.team1Games)")
                                             .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(Color(red: 0.2, green: 0.55, blue: 1.0))
                                         Text("-")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                         Text("\(scoreManager.currentMatch.currentSet.team2Games)")
                                             .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.green)
+                                            .foregroundColor(Color(red: 0.1, green: 0.95, blue: 0.45))
                                     }
                                 }
 
@@ -98,13 +98,13 @@ struct ContentView: View {
                                     HStack(spacing: 8) {
                                         Text("\(scoreManager.currentMatch.team1Sets)")
                                             .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(Color(red: 0.2, green: 0.55, blue: 1.0))
                                         Text("-")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                         Text("\(scoreManager.currentMatch.team2Sets)")
                                             .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(.green)
+                                            .foregroundColor(Color(red: 0.1, green: 0.95, blue: 0.45))
                                     }
                                 }
                             }
@@ -214,7 +214,9 @@ struct ContentView: View {
 
     private func playerInitialBadge(name: String, playerCode: String, servingPlayer: String) -> some View {
         let isServing = servingPlayer == playerCode
-        let teamColor: Color = (playerCode == "A" || playerCode == "B") ? .blue : .green
+        let teamColor: Color = (playerCode == "A" || playerCode == "B")
+            ? Color(red: 0.2, green: 0.55, blue: 1.0)
+            : Color(red: 0.1, green: 0.95, blue: 0.45)
         return ZStack {
             Circle()
                 .fill(isServing ? teamColor : teamColor.opacity(0.2))
@@ -245,7 +247,9 @@ struct ContentView: View {
         let player2Name = team == 1 ? match.team1Player2 : match.team2Player2
         let player1Label = player1Name.isEmpty ? "P1" : player1Name
         let player2Label = player2Name.isEmpty ? "P2" : player2Name
-        let teamColor: Color = team == 1 ? .blue : .green
+        let teamColor: Color = team == 1
+            ? Color(red: 0.2, green: 0.55, blue: 1.0)
+            : Color(red: 0.1, green: 0.95, blue: 0.45)
         let height = geometry.size.height * 0.8
 
         // Serving player (tiebreak-aware)
@@ -258,14 +262,14 @@ struct ContentView: View {
         ZStack {
             // Split background: top and bottom halves have slightly different tints
             VStack(spacing: 0) {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(teamColor.opacity(0.12))
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(teamColor.opacity(0.22))
                     .padding(.bottom, 0.5)
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(teamColor.opacity(0.06))
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(teamColor.opacity(0.12))
                     .padding(.top, 0.5)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: 18))
 
             VStack(spacing: 0) {
                 // Top half — player 1
@@ -285,7 +289,7 @@ struct ContentView: View {
                                 Text(player1Label)
                                     .font(.caption)
                                     .fontWeight(p1Serving ? .bold : .semibold)
-                                    .foregroundColor(p1Serving ? teamColor : teamColor.opacity(0.5))
+                                    .foregroundColor(p1Serving ? .white : .white.opacity(0.7))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.6)
                             }
@@ -296,7 +300,7 @@ struct ContentView: View {
                 .buttonStyle(.plain)
 
                 Rectangle()
-                    .fill(teamColor.opacity(0.3))
+                    .fill(teamColor.opacity(0.5))
                     .frame(height: 1)
 
                 // Bottom half — player 2
@@ -316,7 +320,7 @@ struct ContentView: View {
                                 Text(player2Label)
                                     .font(.caption)
                                     .fontWeight(p2Serving ? .bold : .semibold)
-                                    .foregroundColor(p2Serving ? teamColor : teamColor.opacity(0.5))
+                                    .foregroundColor(p2Serving ? .white : .white.opacity(0.7))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.6)
                             }
@@ -330,10 +334,10 @@ struct ContentView: View {
             // Score centered, non-interactive
             Text(score)
                 .font(.system(size: 44, weight: .bold))
-                .foregroundColor(isAdvantage ? .green : .primary)
+                .foregroundColor(isAdvantage ? Color(red: 0.1, green: 0.95, blue: 0.45) : .primary)
                 .allowsHitTesting(false)
         }
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(teamColor.opacity(0.4), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(teamColor.opacity(0.7), lineWidth: 1))
         .frame(height: height)
     }
 
@@ -395,7 +399,9 @@ struct ServeSelectionView: View {
     var body: some View {
         let match = scoreManager.currentMatch
         let team = match.servingTeam ?? 1
-        let teamColor: Color = team == 1 ? .blue : .green
+        let teamColor: Color = team == 1
+            ? Color(red: 0.2, green: 0.55, blue: 1.0)
+            : Color(red: 0.1, green: 0.95, blue: 0.45)
         let players: [(code: String, name: String)] = team == 1
             ? [("A", match.team1Player1.isEmpty ? "Player A" : match.team1Player1),
                ("B", match.team1Player2.isEmpty ? "Player B" : match.team1Player2)]
