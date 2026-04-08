@@ -72,9 +72,11 @@ struct Set: Codable, Identifiable {
         // Check for tiebreak win (first to 7, win by 2)
         if let tiebreak = tiebreakScore {
             if tiebreak.team1 >= 7 && tiebreak.team1 - tiebreak.team2 >= 2 {
+                team1Games = 7 // advance from 6 to 7 to show 7-6
                 isCompleted = true
                 self.winner = 1
             } else if tiebreak.team2 >= 7 && tiebreak.team2 - tiebreak.team1 >= 2 {
+                team2Games = 7 // advance from 6 to 7 to show 6-7
                 isCompleted = true
                 self.winner = 2
             }
