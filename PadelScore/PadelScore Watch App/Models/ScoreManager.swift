@@ -203,9 +203,9 @@ class ScoreManager: ObservableObject {
 
     func selectServer(_ playerCode: String) {
         currentMatch.servingPlayer = playerCode
-        currentMatch.canonicalServingPlayer = playerCode
         currentMatch.servingTeam = (playerCode == "A" || playerCode == "B") ? 1 : 2
-        // Now that the server is confirmed, send the 0-0 score with the correct initials
+        // canonicalServingPlayer is intentionally NOT updated here — it tracks the fixed
+        // A→C→B→D rotation slot and must not be overridden by which player the user picks.
         sendScoreToScoreboard()
     }
     

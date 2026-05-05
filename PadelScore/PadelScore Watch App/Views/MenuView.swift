@@ -12,9 +12,10 @@ struct MenuView: View {
     @Binding var showingHistory: Bool
     @Binding var showingSettings: Bool
     @Binding var showingMenu: Bool
+    @Binding var showingChangeServer: Bool
     let isMatchInProgress: Bool
     @Environment(\.dismiss) var dismiss
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -26,6 +27,16 @@ struct MenuView: View {
                         HStack {
                             Image(systemName: "arrow.clockwise")
                             Text("New Match")
+                        }
+                    }
+
+                    Button {
+                        showingChangeServer = true
+                        dismiss()
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.left.arrow.right")
+                            Text("Change Server")
                         }
                     }
                 }
@@ -68,6 +79,7 @@ struct MenuView: View {
         showingHistory: .constant(false),
         showingSettings: .constant(false),
         showingMenu: .constant(true),
+        showingChangeServer: .constant(false),
         isMatchInProgress: true
     )
 }

@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showingMenu = false
     @State private var showingNewMatchSetup = false
     @State private var showingServeSelection = false
+    @State private var showingChangeServer = false
     @State private var lastTapTime: Date?
     @State private var lastTapTeam: Int?
     @State private var pendingIncrementTask: Task<Void, Never>?
@@ -164,8 +165,13 @@ struct ContentView: View {
                     showingHistory: $showingHistory,
                     showingSettings: $showingSettings,
                     showingMenu: $showingMenu,
+                    showingChangeServer: $showingChangeServer,
                     isMatchInProgress: !scoreManager.currentMatch.isCompleted
                 )
+            }
+            .sheet(isPresented: $showingChangeServer) {
+                ChangeServerView()
+                    .environmentObject(scoreManager)
             }
             .sheet(isPresented: $showingNewMatchSetup) {
                 NewMatchSetupView(gameSettings: gameSettings)
@@ -437,6 +443,63 @@ struct ServeSelectionView: View {
             .frame(maxHeight: .infinity, alignment: .center)
         }
         .navigationTitle("Serve")
+    }
+}
+
+struct ChangeServerView: View {
+    @EnvironmentObject var scoreManager: ScoreManager
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        let match = scoreManager.currentMatch
+        let teams: [( color: Color, players: [(code: String, name: String)])] = [
+            (
+                Color(red: 0.2, green: 0.55, blue: 1.0),
+                [
+                    ("A", match.team1Player1.isEmpty ? "Player A" : match.team1Player1),
+                    ("B", match.team1Player2.isEmpty ? "Player B" : match.team1Player2)
+                ]
+            ),
+            (
+                Color(red: 0.1, green: 0.95, blue: 0.45),
+                [
+                    ("C", match.team2Player1.isEmpty ? "Player C" : match.team2Player1),
+                    ("D", match.team2Player2.isEmpty ? "Player D" : match.team2Player2)
+                ]
+            )
+        ]
+
+        NavigationStack {
+            List {
+                ForEach(teams.indices, id: \.self) { i in
+                    let team = teams[i]
+                    Section("Team \(i + 1)") {
+                        ForEach(team.players, id: \.code) { player in
+                            Button {
+                                scoreManager.selectServer(player.code)
+                                dismiss()
+                            } label: {
+                                HStack {
+                                    Text(player.name)
+                                    Spacer()
+                                    if match.servingPlayer == player.code {
+                                        Image(systemName: "circle.fill")
+                                            .foregroundColor(team.color)
+                                            .font(.caption)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Change Server")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
     }
 }
 
