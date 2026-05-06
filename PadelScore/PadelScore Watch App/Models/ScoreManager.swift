@@ -204,8 +204,12 @@ class ScoreManager: ObservableObject {
     func selectServer(_ playerCode: String) {
         currentMatch.servingPlayer = playerCode
         currentMatch.servingTeam = (playerCode == "A" || playerCode == "B") ? 1 : 2
-        // canonicalServingPlayer is intentionally NOT updated here — it tracks the fixed
-        // A→C→B→D rotation slot and must not be overridden by which player the user picks.
+        // Record who served for this team so the next automatic rotation picks the correct alternate.
+        if playerCode == "A" || playerCode == "B" {
+            currentMatch.team1LastServer = playerCode
+        } else {
+            currentMatch.team2LastServer = playerCode
+        }
         sendScoreToScoreboard()
     }
     
@@ -226,13 +230,12 @@ class ScoreManager: ObservableObject {
         }
         currentMatch.currentGame = Game()
 
-        // For tiebreak sets, rotateServe() was not called before reaching here, so call it now
-        // to advance past the tiebreak server. For regular sets, rotateServe() was already
-        // called in handleGameCompletion() so the canonical rotation is already correct.
+        // For tiebreak sets, rotateServe() was not called during tiebreak point increments,
+        // so call it now to advance past the tiebreak server. For regular sets it was already
+        // called in handleGameCompletion() for the set's final game.
         if completedSetWasTiebreak {
             currentMatch.rotateServe()
         }
-        // canonicalServingPlayer and servingPlayer are now correctly set by the rotation
 
         // Delay serve selection so the UI shows the updated set score first
         Task { @MainActor in
@@ -280,7 +283,11 @@ class ScoreManager: ObservableObject {
         var match = matchWithCurrentPlayers()
         match.servingTeam = servingTeam
         match.servingPlayer = servingPlayer
-        match.canonicalServingPlayer = servingPlayer
+        if servingPlayer == "A" || servingPlayer == "B" {
+            match.team1LastServer = servingPlayer
+        } else {
+            match.team2LastServer = servingPlayer
+        }
         match.watchCode = watchCode
         if let code = watchCode {
             match.setNumberOffset = matchHistory

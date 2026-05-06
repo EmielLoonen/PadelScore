@@ -74,7 +74,8 @@ struct Match: Codable, Identifiable {
     var team2Name: String
     var servingTeam: Int? // 1 or 2, nil if not set
     var servingPlayer: String? // A, B, C, or D
-    var canonicalServingPlayer: String? // Tracks rotation position independently of user overrides
+    var team1LastServer: String? // A or B — who last served for team 1
+    var team2LastServer: String? // C or D — who last served for team 2
     var team1Player1: String
     var team1Player2: String
     var team2Player1: String
@@ -131,28 +132,22 @@ struct Match: Codable, Identifiable {
     var currentTeam2Side: String { currentTeam1Side == "L" ? "R" : "L" }
     
     mutating func rotateServe() {
-        // Rotate serve: A (Team 1) -> C (Team 2) -> B (Team 1) -> D (Team 2) -> A...
-        // Use canonicalServingPlayer to track rotation position independently of user overrides
-        let canonical = canonicalServingPlayer ?? servingPlayer ?? "A"
+        // Flip to the other team, then pick whichever player from that team hasn't served most recently.
+        // team1LastServer / team2LastServer are updated here so automatic rotations stay correct
+        // even without a user-facing serve selection prompt.
+        let nextTeam = servingTeam == 1 ? 2 : 1
+        servingTeam = nextTeam
 
-        switch canonical {
-        case "A":
-            canonicalServingPlayer = "C"
-            servingTeam = 2
-        case "C":
-            canonicalServingPlayer = "B"
-            servingTeam = 1
-        case "B":
-            canonicalServingPlayer = "D"
-            servingTeam = 2
-        case "D":
-            canonicalServingPlayer = "A"
-            servingTeam = 1
-        default:
-            canonicalServingPlayer = "A"
-            servingTeam = 1
+        if nextTeam == 1 {
+            // nil (never served) → suggest "A"; otherwise pick the other one
+            let next = (team1LastServer == "A") ? "B" : "A"
+            team1LastServer = next
+            servingPlayer = next
+        } else {
+            let next = (team2LastServer == "C") ? "D" : "C"
+            team2LastServer = next
+            servingPlayer = next
         }
-        servingPlayer = canonicalServingPlayer
     }
     
     var currentSet: Set {
