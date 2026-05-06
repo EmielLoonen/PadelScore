@@ -422,7 +422,6 @@ struct ServeSelectionView: View {
 
                 HStack(spacing: 8) {
                     ForEach(players, id: \.code) { player in
-                        let isSuggested = match.servingPlayer == player.code
                         Button {
                             scoreManager.selectServer(player.code)
                             dismiss()
@@ -434,8 +433,8 @@ struct ServeSelectionView: View {
                                 .frame(maxWidth: .infinity)
                                 .contentShape(Rectangle())
                         }
-                        .buttonStyle(isSuggested ? .borderedProminent : .bordered)
-                        .tint(teamColor)
+                        .buttonStyle(.bordered)
+                        .tint(match.servingPlayer == player.code ? teamColor : .secondary)
                         .frame(height: geometry.size.height * 0.7)
                     }
                 }
