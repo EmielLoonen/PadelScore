@@ -13,6 +13,7 @@ class ScoreManager: ObservableObject {
     @Published var currentMatch: Match
     @Published var matchHistory: [Match] = []
     @Published var pendingServeSelection = false
+    @Published var inputLocked = false
     @Published var submittedMatchIds: Swift.Set<UUID> = []
 
     private let historyKey = "PadelScoreMatchHistory"
@@ -47,6 +48,7 @@ class ScoreManager: ObservableObject {
     
     func incrementPoint(for team: Int, scoringPlayer: String? = nil) {
         guard !currentMatch.isCompleted else { return }
+        guard !inputLocked else { return }
 
         // Save current state for undo
         saveStateForUndo()
@@ -210,6 +212,7 @@ class ScoreManager: ObservableObject {
         } else {
             currentMatch.team2LastServer = playerCode
         }
+        inputLocked = false
         sendScoreToScoreboard()
     }
     
@@ -237,9 +240,12 @@ class ScoreManager: ObservableObject {
             currentMatch.rotateServe()
         }
 
-        // Delay serve selection so the UI shows the updated set score first
+        // Block input immediately so no points can be scored during the delay window.
+        // Released just before the sheet appears (which then blocks interaction itself).
+        inputLocked = true
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            self.inputLocked = false
             self.pendingServeSelection = true
         }
     }
