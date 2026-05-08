@@ -6,5 +6,8 @@ DerivedData/
 *.moved-aside
 *.pbxuser
 
+# Build output
+build/
+
 # macOS
 .DS_Store
