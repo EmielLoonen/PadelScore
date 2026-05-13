@@ -42,8 +42,9 @@ struct GameSettingsData: Codable {
     var team1Side: String
     var lastWatchCode: String
     var useTestServer: Bool
+    var cloudScoreboardEnabled: Bool
 
-    init(scoringMode: ScoringMode = .goldenPoint, scoreboardEnabled: Bool = false, scoreboardIP: String = "", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", lastWatchCode: String = "", useTestServer: Bool = false) {
+    init(scoringMode: ScoringMode = .goldenPoint, scoreboardEnabled: Bool = false, scoreboardIP: String = "", team1Player1: String = "", team1Player2: String = "", team2Player1: String = "", team2Player2: String = "", team1Side: String = "R", lastWatchCode: String = "", useTestServer: Bool = false, cloudScoreboardEnabled: Bool = false) {
         self.scoringMode = scoringMode
         self.scoreboardEnabled = scoreboardEnabled
         self.scoreboardIP = scoreboardIP
@@ -54,6 +55,7 @@ struct GameSettingsData: Codable {
         self.team1Side = team1Side
         self.lastWatchCode = lastWatchCode
         self.useTestServer = useTestServer
+        self.cloudScoreboardEnabled = cloudScoreboardEnabled
     }
 }
 
@@ -102,6 +104,10 @@ class GameSettings: ObservableObject {
         didSet { save() }
     }
 
+    @Published var cloudScoreboardEnabled: Bool {
+        didSet { save() }
+    }
+
     private let settingsKey = "PadelScoreGameSettings"
 
     init() {
@@ -125,6 +131,7 @@ class GameSettings: ObservableObject {
         self.team1Side = settingsData.team1Side
         self.lastWatchCode = settingsData.lastWatchCode
         self.useTestServer = settingsData.useTestServer
+        self.cloudScoreboardEnabled = settingsData.cloudScoreboardEnabled
     }
 
     private func save() {
@@ -138,7 +145,8 @@ class GameSettings: ObservableObject {
             team2Player2: team2Player2,
             team1Side: team1Side,
             lastWatchCode: lastWatchCode,
-            useTestServer: useTestServer
+            useTestServer: useTestServer,
+            cloudScoreboardEnabled: cloudScoreboardEnabled
         )
         if let encoded = try? JSONEncoder().encode(settingsData) {
             UserDefaults.standard.set(encoded, forKey: settingsKey)

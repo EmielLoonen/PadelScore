@@ -7,7 +7,46 @@
 
 import Foundation
 
+// Codable payload sent to the cloud score endpoint
+private struct CloudScorePayload: Encodable {
+    struct GameInfo: Encodable {
+        let team1Points: String
+        let team2Points: String
+        let isTiebreak: Bool
+    }
+    struct TiebreakInfo: Encodable {
+        let team1: Int
+        let team2: Int
+    }
+    struct SetInfo: Encodable {
+        let team1Games: Int
+        let team2Games: Int
+        let isTiebreak: Bool
+        let winner: Int?
+    }
+    struct MatchScore: Encodable {
+        let team1Sets: Int
+        let team2Sets: Int
+    }
+
+    let courtCode: String
+    let timestamp: String
+    let players: [String: String]
+    let servingPlayer: String?
+    let servingTeam: Int?
+    let game: GameInfo
+    let tiebreak: TiebreakInfo?
+    let currentSet: SetInfo
+    let sets: [SetInfo]
+    let matchScore: MatchScore
+    let team1Side: String
+    let isCompleted: Bool
+    let winner: Int?
+}
+
 class ScoreboardService {
+    static let productionURL = "https://padel-coordinator-api.onrender.com"
+    static let testURL       = "http://localhost:3000"
     
     /// Returns the initials of the currently serving player from the match.
     private func servingInitials(_ match: Match) -> String {
@@ -204,5 +243,67 @@ class ScoreboardService {
         }
         
         task.resume()
+    }
+
+    // MARK: - Cloud scoreboard
+
+    func sendCloudScore(match: Match, courtCode: String, useTestServer: Bool = false) {
+        let base = useTestServer ? Self.testURL : Self.productionURL
+        guard let url = URL(string: "\(base)/courts/\(courtCode)/score") else { return }
+
+        let isoDate = ISO8601DateFormatter().string(from: Date())
+
+        let payload = CloudScorePayload(
+            courtCode: courtCode,
+            timestamp: isoDate,
+            players: [
+                "A": match.team1Player1,
+                "B": match.team1Player2,
+                "C": match.team2Player1,
+                "D": match.team2Player2
+            ],
+            servingPlayer: match.servingPlayer,
+            servingTeam: match.servingTeam,
+            game: CloudScorePayload.GameInfo(
+                team1Points: match.currentGame.team1Points.displayValue,
+                team2Points: match.currentGame.team2Points.displayValue,
+                isTiebreak: match.currentSet.isTiebreak
+            ),
+            tiebreak: match.currentSet.tiebreakScore.map {
+                CloudScorePayload.TiebreakInfo(team1: $0.team1, team2: $0.team2)
+            },
+            currentSet: CloudScorePayload.SetInfo(
+                team1Games: match.currentSet.team1Games,
+                team2Games: match.currentSet.team2Games,
+                isTiebreak: match.currentSet.isTiebreak,
+                winner: match.currentSet.winner
+            ),
+            sets: match.sets.map {
+                CloudScorePayload.SetInfo(
+                    team1Games: $0.team1Games,
+                    team2Games: $0.team2Games,
+                    isTiebreak: $0.isTiebreak,
+                    winner: $0.winner
+                )
+            },
+            matchScore: CloudScorePayload.MatchScore(
+                team1Sets: match.team1Sets,
+                team2Sets: match.team2Sets
+            ),
+            team1Side: match.currentTeam1Side, // effective side, accounts for set switching
+            isCompleted: match.isCompleted,
+            winner: match.winner
+        )
+
+        guard let jsonData = try? JSONEncoder().encode(payload) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+
+        URLSession.shared.dataTask(with: request) { _, _, error in
+            if let error { print("Cloud scoreboard error: \(error.localizedDescription)") }
+        }.resume()
     }
 }

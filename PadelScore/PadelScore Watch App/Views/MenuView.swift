@@ -13,6 +13,7 @@ struct MenuView: View {
     @Binding var showingSettings: Bool
     @Binding var showingMenu: Bool
     @Binding var showingChangeServer: Bool
+    @Binding var showingViewer: Bool
     let isMatchInProgress: Bool
     @Environment(\.dismiss) var dismiss
 
@@ -41,6 +42,16 @@ struct MenuView: View {
                     }
                 }
                 
+                Button {
+                    showingViewer = true
+                    dismiss()
+                } label: {
+                    HStack {
+                        Image(systemName: "eye")
+                        Text("Join as Viewer")
+                    }
+                }
+
                 Button {
                     showingHistory = true
                     dismiss()
@@ -80,6 +91,7 @@ struct MenuView: View {
         showingSettings: .constant(false),
         showingMenu: .constant(true),
         showingChangeServer: .constant(false),
+        showingViewer: .constant(false),
         isMatchInProgress: true
     )
 }

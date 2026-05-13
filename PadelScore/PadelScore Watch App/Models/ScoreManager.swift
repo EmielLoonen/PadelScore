@@ -88,6 +88,7 @@ class ScoreManager: ObservableObject {
             
             // Send to scoreboard
             sendScoreToScoreboard()
+            sendCloudScoreIfEnabled()
             return
         }
         
@@ -104,6 +105,7 @@ class ScoreManager: ObservableObject {
             // Send to scoreboard (skip if waiting for serve selection — will send after server is confirmed)
             if !pendingServeSelection {
                 sendScoreToScoreboard()
+                sendCloudScoreIfEnabled()
             }
         }
     }
@@ -156,7 +158,8 @@ class ScoreManager: ObservableObject {
         
         // Send to scoreboard
         sendScoreToScoreboard()
-        
+        sendCloudScoreIfEnabled()
+
         // If set score changed, send it to scoreboard
         if setScoreChanged {
             sendSetScoreToScoreboard()
@@ -214,6 +217,7 @@ class ScoreManager: ObservableObject {
         }
         inputLocked = false
         sendScoreToScoreboard()
+        sendCloudScoreIfEnabled()
     }
     
     private func handleSetCompletion() {
@@ -268,10 +272,13 @@ class ScoreManager: ObservableObject {
         
         currentMatch.isCompleted = true
         currentMatch.endDate = Date()
-        
+
         // Save to history
         saveMatchToHistory()
-        
+
+        // Notify cloud viewers that the match has ended
+        sendCloudScoreIfEnabled()
+
         // Play success haptic
         let haptic = WKInterfaceDevice.current()
         haptic.play(.success)
@@ -376,6 +383,13 @@ class ScoreManager: ObservableObject {
     
     // MARK: - Scoreboard Integration
     
+    private func sendCloudScoreIfEnabled() {
+        guard gameSettings.cloudScoreboardEnabled else { return }
+        let code = currentMatch.watchCode ?? gameSettings.lastWatchCode
+        guard !code.isEmpty else { return }
+        scoreboardService.sendCloudScore(match: currentMatch, courtCode: code, useTestServer: gameSettings.useTestServer)
+    }
+
     private func sendScoreToScoreboard() {
         // Check if scoreboard is enabled
         guard gameSettings.scoreboardEnabled else { return }

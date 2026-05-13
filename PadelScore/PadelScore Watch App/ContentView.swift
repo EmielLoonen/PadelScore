@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var showingNewMatchSetup = false
     @State private var showingServeSelection = false
     @State private var showingChangeServer = false
+    @State private var showingViewer = false
     @State private var lastTapTime: Date?
     @State private var lastTapTeam: Int?
     @State private var pendingIncrementTask: Task<Void, Never>?
@@ -166,8 +167,13 @@ struct ContentView: View {
                     showingSettings: $showingSettings,
                     showingMenu: $showingMenu,
                     showingChangeServer: $showingChangeServer,
+                    showingViewer: $showingViewer,
                     isMatchInProgress: !scoreManager.currentMatch.isCompleted
                 )
+            }
+            .sheet(isPresented: $showingViewer) {
+                ViewerView()
+                    .environmentObject(gameSettings)
             }
             .sheet(isPresented: $showingChangeServer) {
                 ChangeServerView()

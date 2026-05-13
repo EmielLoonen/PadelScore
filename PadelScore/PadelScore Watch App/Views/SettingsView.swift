@@ -30,10 +30,18 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Scoreboard") {
-                    Toggle("Enable Scoreboard", isOn: $gameSettings.scoreboardEnabled)
+                Section("Local Scoreboard") {
+                    Toggle("Enable", isOn: $gameSettings.scoreboardEnabled)
+                    TextField("IP Address", text: $gameSettings.scoreboardIP)
+                }
 
-                    TextField("Scoreboard IP Address", text: $gameSettings.scoreboardIP)
+                Section("Cloud Scoreboard") {
+                    Toggle("Enable", isOn: $gameSettings.cloudScoreboardEnabled)
+                    if gameSettings.cloudScoreboardEnabled {
+                        Text("Uses court code to push score live")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Section("Developer") {
